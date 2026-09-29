@@ -1,13 +1,16 @@
 // Offline-Speicher. Bei jeder Änderung an der App die Versionsnummer erhöhen,
 // sonst bekommen installierte Handys die neuen Dateien nicht.
-const CACHE = 'projekt100-v1';
-const ASSETS = [
+const CACHE = 'projekt100-v2';
+const CORE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './css/styles.css',
   './js/app.js',
   './js/data.js',
+  './js/recipes.js',
+  './js/planner.js',
+  './js/gesture.js',
   './js/logic.js',
   './js/store.js',
   './js/chart.js',
@@ -17,6 +20,8 @@ const ASSETS = [
   './js/views/shop.js',
   './js/views/progress.js',
   './js/views/sheets.js',
+  './js/views/parts.js',
+  './js/views/swipe.js',
   './fonts/BricolageGrotesque-latin.woff2',
   './fonts/Figtree-latin.woff2',
   './icons/icon-192.png',
@@ -25,8 +30,23 @@ const ASSETS = [
   './icons/favicon-48.png',
 ];
 
+// Ein Foto je Gericht. Fehlt eins, bleibt die App trotzdem installierbar.
+const PHOTOS = [
+  'porridge', 'quark_bowl', 'shake_fruehstueck', 'overnight_oats', 'ruehrei_brot', 'eiermuffins', 'huettenkaese_brot',
+  'skyr_apfel', 'bowl_haehnchen', 'bowl_thunfisch', 'teriyaki_haehnchen', 'haehnchen_curry', 'abend_schenkel_kartoffel',
+  'abend_brust_reis', 'abend_schenkel_reis', 'haehnchen_wrap', 'haehnchen_suesskartoffel', 'pute_paprika_reis', 'pute_gyros',
+  'abend_huefte', 'chili_con_carne', 'hack_reis_pfanne', 'burger_bowl', 'abend_schweinelachs', 'schwein_bowl', 'lachs_reis',
+  'kabeljau_kartoffel', 'thunfisch_nudeln', 'garnelen_reis', 'shakshuka', 'ofenkartoffel_huettenkaese', 'snack_nuesse',
+  'snack_shake', 'skyr_beeren', 'protein_pudding', 'reiswaffeln_erdnuss', 'huettenkaese_rohkost', 'quark_apfel', 'eier_airfryer',
+].map((id) => `./img/${id}.webp`);
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
+  event.waitUntil(
+    caches.open(CACHE).then(async (cache) => {
+      await cache.addAll(CORE);
+      await Promise.allSettled(PHOTOS.map((url) => cache.add(url)));
+    }),
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -45,6 +65,16 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then((hit) => hit || fetch(event.request)),
+    caches.match(event.request, { ignoreSearch: true }).then(
+      (hit) =>
+        hit ||
+        fetch(event.request).then((response) => {
+          if (response.ok && new URL(event.request.url).pathname.includes('/img/')) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        }),
+    ),
   );
 });

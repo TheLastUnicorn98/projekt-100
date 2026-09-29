@@ -1276,3 +1276,488 @@ input:focus-visible {
     padding-top: 40px;
   }
 }
+
+/* ---------- Wischen wie bei Tinder ---------- */
+
+:root {
+  --c-like: #22c47a;
+  --c-nope: #ff4f5e;
+  --c-super: #3d9bff;
+}
+
+.view-wischen,
+.view-plan {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+}
+
+.view-wischen {
+  gap: 14px;
+}
+
+.swipe-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.swipe-top > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.swipe-top h1 {
+  font-size: 1.6rem;
+}
+
+a.icon-btn {
+  text-decoration: none;
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.count.is-done {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.deck {
+  position: relative;
+  height: min(60dvh, 540px);
+  min-height: 380px;
+}
+
+.deck-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 24px;
+  border: 2px dashed var(--line);
+  border-radius: 26px;
+  text-align: center;
+}
+
+.deck-empty .ico {
+  width: 48px;
+  height: 48px;
+  color: var(--brand);
+}
+
+.card-swipe {
+  --like: 0;
+  --nope: 0;
+  --super: 0;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 26px;
+  background: var(--surface-2);
+  box-shadow: 0 22px 44px -22px rgb(0 0 0 / 0.6);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  transition: transform 0.25s ease;
+}
+
+.card-swipe.is-top {
+  z-index: 2;
+  animation: card-in 0.22s ease;
+}
+
+.card-swipe.is-under {
+  transform: scale(0.94) translateY(16px);
+  filter: brightness(0.8);
+}
+
+.card-swipe.is-dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+.card-swipe.is-leaving {
+  transition: transform 0.32s ease-in;
+}
+
+@keyframes card-in {
+  from {
+    transform: scale(0.94) translateY(16px);
+  }
+}
+
+.card-photo,
+.sheet-photo {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 30% 15%, var(--g1), var(--g2));
+}
+
+.card-photo {
+  position: absolute;
+  inset: 0;
+}
+
+.card-photo img,
+.sheet-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-fruehstueck {
+  --g1: #f7cf87;
+  --g2: #b86a22;
+}
+
+.card-haupt {
+  --g1: #7cc29c;
+  --g2: #16493a;
+}
+
+.card-snack {
+  --g1: #f4a9bb;
+  --g2: #9c3552;
+}
+
+.card-device {
+  width: 96px;
+  height: 96px;
+  color: rgb(255 255 255 / 0.55);
+  stroke-width: 1.2;
+}
+
+.card-swipe::after {
+  content: '';
+  position: absolute;
+  inset: 38% 0 0;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.9) 10%, rgb(0 0 0 / 0));
+  pointer-events: none;
+}
+
+.card-kind {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.38);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.card-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  padding: 18px 16px 16px;
+  color: #fff;
+}
+
+.card-info h2 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 0.35);
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.card-macros {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.card-macros li {
+  display: grid;
+  gap: 1px;
+  padding: 7px 8px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.16);
+  backdrop-filter: blur(8px);
+  font-size: 0.625rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.card-macros strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.stamp {
+  position: absolute;
+  z-index: 3;
+  padding: 2px 12px;
+  border: 4px solid currentColor;
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.stamp-like {
+  top: 34px;
+  left: 18px;
+  color: var(--c-like);
+  opacity: var(--like);
+  transform: rotate(-14deg);
+}
+
+.stamp-nope {
+  top: 34px;
+  right: 18px;
+  color: var(--c-nope);
+  opacity: var(--nope);
+  transform: rotate(14deg);
+}
+
+.stamp-super {
+  top: 40%;
+  left: 50%;
+  color: var(--c-super);
+  opacity: var(--super);
+  transform: translate(-50%, -50%) rotate(-8deg);
+}
+
+.swipe-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.swipe-btn {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.5);
+  transition: transform 0.12s ease;
+}
+
+.swipe-btn:active {
+  transform: scale(0.9);
+}
+
+.swipe-btn:disabled,
+.btn:disabled {
+  opacity: 0.4;
+}
+
+.swipe-btn .ico {
+  width: 30px;
+  height: 30px;
+  stroke-width: 2.6;
+}
+
+.swipe-btn.nope {
+  color: var(--c-nope);
+}
+
+.swipe-btn.like {
+  color: var(--c-like);
+}
+
+.swipe-btn.like .ico,
+.swipe-btn.super .ico {
+  fill: currentColor;
+  stroke-width: 1.5;
+}
+
+.swipe-btn.super {
+  width: 52px;
+  height: 52px;
+  color: var(--c-super);
+}
+
+.swipe-btn.super .ico {
+  width: 24px;
+  height: 24px;
+}
+
+.swipe-btn.undo {
+  width: 44px;
+  height: 44px;
+  color: var(--kcal);
+}
+
+.swipe-btn.undo .ico {
+  width: 22px;
+  height: 22px;
+}
+
+.hint.center {
+  text-align: center;
+}
+
+.plan-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+/* ---------- Plan-Hinweise ---------- */
+
+.plan-cta {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+  border-radius: var(--radius);
+  background: linear-gradient(140deg, var(--brand) 20%, color-mix(in srgb, var(--brand) 55%, var(--kcal)));
+  color: var(--brand-ink);
+  box-shadow: var(--shadow);
+}
+
+.plan-cta .eyebrow {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.plan-cta h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.plan-cta .btn {
+  justify-self: start;
+  background: var(--brand-ink);
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.plan-cta-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.banner-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.meal-note {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--kcal-ink);
+}
+
+.week-name small {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--kcal-ink);
+}
+
+.week-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+
+.week-total.is-ok {
+  color: var(--ok);
+}
+
+.sheet-photo {
+  position: relative;
+  height: 200px;
+  border-radius: 18px;
+}
+
+.swap-liked {
+  color: var(--protein);
+}
+
+.swap-liked .ico {
+  fill: currentColor;
+}
+
+/* ---------- Vorlieben ---------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.chips legend {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.chip-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  font-weight: 650;
+}
+
+.chip-toggle[aria-pressed='true'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+}

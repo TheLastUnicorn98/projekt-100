@@ -1,7 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as L from '../js/logic.js';
-import { ITEMS, RECIPES, WEEK_PLAN, CATEGORIES } from '../js/data.js';
 
 const near = (actual, expected, tol = 0.5) =>
   assert.ok(Math.abs(actual - expected) <= tol, `${actual} ist nicht ungefähr ${expected}`);
@@ -24,46 +23,14 @@ test('Datum: Wochentag und Woche ab Montag', () => {
   ]);
 });
 
-test('Nährwerte der Rezepte', () => {
-  const p = L.recipeMacros(RECIPES.porridge, ITEMS);
-  near(p.kcal, 424);
-  near(p.protein, 33.5);
-  const b = L.recipeMacros(RECIPES.bowl_thunfisch, ITEMS);
-  near(b.kcal, 794);
-  near(b.protein, 52.4);
-  assert.equal(L.recipeMacros(RECIPES.frei, ITEMS).kcal, 1000);
-});
-
-test('Tagesplan mit Tausch und Tagessumme', () => {
-  const tue = L.planFor('2026-09-29', undefined, WEEK_PLAN);
-  assert.equal(tue.mittag, 'bowl_haehnchen');
-  const swapped = L.planFor('2026-09-29', { swaps: { mittag: 'bowl_thunfisch' } }, WEEK_PLAN);
-  assert.equal(swapped.mittag, 'bowl_thunfisch');
-  assert.equal(swapped.fruehstueck, 'quark_bowl');
-  const sat = L.planFor('2026-10-03', {}, WEEK_PLAN);
-  assert.equal(sat.abend, 'frei');
-  assert.equal(sat.snack, null);
-
-  const mon = L.planFor('2026-09-28', {}, WEEK_PLAN);
-  const all = { fruehstueck: true, mittag: true, abend: true, snack: true };
-  const t = L.dayTotals(mon, all, RECIPES, ITEMS);
-  near(t.kcal, 2235, 1);
-  near(t.protein, 157.8);
-  near(L.dayTotals(mon, { fruehstueck: true }, RECIPES, ITEMS).kcal, 424);
-  assert.equal(L.dayTotals(mon, {}, RECIPES, ITEMS).kcal, 0);
-});
-
-test('Plan-Tag komplett und Serie', () => {
-  const sat = L.planFor('2026-10-03', {}, WEEK_PLAN);
-  assert.equal(L.isPlanComplete(sat, { fruehstueck: true, mittag: true, abend: true }), true);
-  assert.equal(L.isPlanComplete(sat, { fruehstueck: true, mittag: true }), false);
-  const full = { checked: { fruehstueck: true, mittag: true, abend: true, snack: true } };
-  const days = { '2026-09-28': full, '2026-09-29': full, '2026-09-30': { checked: { fruehstueck: true } } };
-  assert.equal(L.streak(days, '2026-09-30', '2026-09-28', WEEK_PLAN), 2);
-  days['2026-09-30'] = full;
-  assert.equal(L.streak(days, '2026-09-30', '2026-09-28', WEEK_PLAN), 3);
-  assert.equal(L.streak(days, '2026-09-30', '2026-09-29', WEEK_PLAN), 2);
-  assert.equal(L.streak({}, '2026-09-30', '2026-09-28', WEEK_PLAN), 0);
+test('Serie: Tage in Folge, heute offen zählt ab gestern, nichts vor dem Start', () => {
+  const done = new Set(['2026-09-28', '2026-09-29']);
+  const isComplete = (iso) => done.has(iso);
+  assert.equal(L.streak(isComplete, '2026-09-30', '2026-09-28'), 2);
+  done.add('2026-09-30');
+  assert.equal(L.streak(isComplete, '2026-09-30', '2026-09-28'), 3);
+  assert.equal(L.streak(isComplete, '2026-09-30', '2026-09-29'), 2);
+  assert.equal(L.streak(() => false, '2026-09-30', '2026-09-28'), 0);
 });
 
 test('Zeitplan wie im Reel', () => {
@@ -133,24 +100,6 @@ test('Etappenziele und Neuberechnung', () => {
   assert.equal(L.bestAverage([]), null);
 });
 
-test('Einkaufsliste aus dem Wochenplan', () => {
-  const { groups, pantry } = L.shoppingList(WEEK_PLAN, RECIPES, ITEMS, CATEGORIES);
-  const amount = (id) => groups.flatMap((g) => g.rows).find((r) => r.id === id)?.amount;
-  assert.equal(amount('haehnchenschenkel'), 750);
-  assert.equal(amount('haehnchenbrust'), 850);
-  assert.equal(amount('reis'), 980);
-  assert.equal(amount('kartoffeln'), 1400);
-  assert.equal(amount('tk_gemuese_mix'), 2100);
-  assert.equal(amount('tk_gemuese'), 1500);
-  assert.equal(amount('thunfisch'), 3);
-  assert.equal(amount('banane'), 8);
-  assert.equal(amount('milch'), 600);
-  assert.equal(amount('haferflocken'), 360);
-  assert.deepEqual(groups.map((g) => g.id), ['fleisch', 'kuehl', 'tk', 'obst', 'trocken']);
-  assert.equal(pantry.find((p) => p.id === 'whey').amount, 180);
-  assert.deepEqual(pantry.map((p) => p.id).sort(), ['gewuerz', 'oel', 'sojasauce', 'whey']);
-});
-
 test('Mengen und Zahlen auf Deutsch', () => {
   assert.equal(L.formatAmount(1400, 'g'), '1,4 kg');
   assert.equal(L.formatAmount(1000, 'g'), '1 kg');
@@ -160,6 +109,9 @@ test('Mengen und Zahlen auf Deutsch', () => {
   assert.equal(L.formatAmount(3, 'Dose'), '3 Dosen');
   assert.equal(L.formatAmount(1, 'Dose'), '1 Dose');
   assert.equal(L.formatAmount(8, 'Stück'), '8 Stück');
+  assert.equal(L.formatAmount(14, 'Scheibe'), '14 Scheiben');
+  assert.equal(L.formatAmount(2, 'Becher'), '2 Becher');
+  assert.equal(L.formatAmount(7, 'EL'), '7 EL');
   assert.equal(L.formatNumber(2234.9, 0), '2.235');
   assert.equal(L.formatNumber(143.86, 1), '143,9');
 });

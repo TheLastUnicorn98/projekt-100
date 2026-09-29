@@ -1,6 +1,9 @@
-import { RECIPES, ITEMS, SLOTS, DEVICES, WEEK_PLAN } from '../data.js';
+import { RECIPES } from '../recipes.js';
+import { ITEMS, DEVICES } from '../data.js';
 import * as L from '../logic.js';
+import * as P from '../planner.js';
 import { esc, icon, fmt, kgText, dateLong, dateShort, weekdayShort, dayNum, rings, miniRing } from '../ui.js';
+import { mealNote, slotLabel } from './parts.js';
 
 function header(ctx, iso, phase) {
   const { s, schedule, todayISO, streak } = ctx;
@@ -21,10 +24,9 @@ function header(ctx, iso, phase) {
 function weekStrip(ctx, iso) {
   const { state, todayISO } = ctx;
   const days = L.weekDates(iso).map((d) => {
-    const plan = L.planFor(d, state.days[d], WEEK_PLAN);
+    const meals = P.dayMeals(ctx.dayPlan(d));
     const checked = state.days[d]?.checked ?? {};
-    const slots = Object.entries(plan).filter(([, id]) => id);
-    const frac = slots.filter(([slot]) => checked[slot]).length / slots.length;
+    const frac = meals.length ? meals.filter(({ slot }) => checked[slot]).length / meals.length : 0;
     const cls = `${d === iso ? 'is-selected' : ''} ${d === todayISO ? 'is-today' : ''}`;
     return `<button class="day ${cls}" data-action="pick-day" data-day="${d}" aria-pressed="${d === iso}" aria-label="${esc(dateLong(d))}">
   <span class="day-name">${weekdayShort(d)}</span>${miniRing(frac)}<span class="day-num">${dayNum(d)}</span></button>`;
@@ -34,19 +36,22 @@ function weekStrip(ctx, iso) {
 }
 
 function banners(ctx, iso, phase, kcalTarget) {
-  const { s, ui, todayISO } = ctx;
+  const { s, ui, todayISO, state, nextMonday } = ctx;
   const out = [];
   if (ui.installEvent) {
     out.push(`<aside class="banner banner-brand"><p>${icon('installieren')} Leg dir Projekt 100 als App auf den Startbildschirm. Sie läuft dann auch ohne Internet.</p>
   <button class="btn primary sm" data-action="install">Installieren</button></aside>`);
   }
   if (phase.phase === 'pause') {
-    out.push(`<aside class="banner banner-kcal"><p><strong>Diät-Pause, Woche ${phase.week} von ${phase.of}.</strong> Du isst diese Tage auf Erhaltung, also rund ${fmt(kcalTarget)} kcal. So kommst du hin: mittags doppelt Reis, abends doppelte Beilage und ein Snack extra.</p></aside>`);
+    out.push(`<aside class="banner banner-kcal"><p><strong>Diät-Pause, Woche ${phase.week} von ${phase.of}.</strong> Du isst diese Tage auf Erhaltung, rund ${fmt(kcalTarget)} kcal. Die Portionen im Plan sind schon größer gerechnet.</p></aside>`);
   }
   if (ctx.recalcDue && iso === todayISO) {
     const next = s.kcal - 120 * (ctx.steps - s.recalcAck);
     out.push(`<aside class="banner banner-brand"><p><strong>${fmt(ctx.steps * 10)} kg geschafft.</strong> Dein Körper verbraucht jetzt etwas weniger. Kalorienziel von ${fmt(s.kcal)} auf ${fmt(next)} kcal senken?</p>
   <div class="row"><button class="btn primary sm" data-action="recalc-apply">Ziel senken</button><button class="btn ghost sm" data-action="recalc-dismiss">Nicht jetzt</button></div></aside>`);
+  }
+  if (iso === todayISO && [5, 6, 0].includes(L.weekday(todayISO)) && !state.plans[nextMonday]) {
+    out.push(`<a class="banner banner-brand banner-link" href="#wischen"><p>${icon('karten')}<strong>Nächste Woche planen.</strong> Wisch dich durch die Gerichte, die App rechnet den Rest.</p></a>`);
   }
   return out.join('');
 }
@@ -69,22 +74,20 @@ function summary(ctx, totals, kcalTarget, allDone) {
 </section>`;
 }
 
-function meals(iso, plan, dayState) {
-  const checked = dayState.checked ?? {};
-  const base = WEEK_PLAN[L.weekday(iso)];
-  return SLOTS.filter(({ id }) => plan[id])
-    .map(({ id: slot, label }) => {
-      const rid = plan[slot];
-      const r = RECIPES[rid];
-      const m = L.recipeMacros(r, ITEMS);
+function meals(iso, day, checked) {
+  return P.dayMeals(day)
+    .map(({ slot, meal }) => {
+      const r = RECIPES[meal.id];
+      const m = P.mealMacros(meal, RECIPES, ITEMS);
       const done = Boolean(checked[slot]);
-      const swapped = rid !== base[slot];
-      const approx = r.fixed ? 'ca. ' : '';
+      const note = mealNote(meal);
+      const label = slotLabel(slot);
       return `<article class="meal ${done ? 'is-done' : ''}">
-  <button class="meal-open" data-action="open-recipe" data-id="${rid}" data-slot="${slot}" data-day="${iso}">
-    <span class="meal-slot">${label}${swapped ? ' · getauscht' : ''}</span>
+  <button class="meal-open" data-action="open-recipe" data-id="${meal.id}" data-slot="${slot}" data-day="${iso}">
+    <span class="meal-slot">${label}</span>
     <span class="meal-name">${esc(r.name)}</span>
-    <span class="meal-meta">${icon(r.device, 'sm')}${DEVICES[r.device]} · ${approx}${fmt(m.kcal)} kcal · ${fmt(m.protein)} g Eiweiß</span>
+    <span class="meal-meta">${icon(r.device, 'sm')}${DEVICES[r.device]} · ${r.fixed ? 'ca. ' : ''}${fmt(m.kcal)} kcal · ${fmt(m.protein)} g Eiweiß</span>
+    ${note ? `<span class="meal-note">${esc(note)}</span>` : ''}
   </button>
   <button class="check" data-action="check" data-slot="${slot}" aria-pressed="${done}" aria-label="${label} ${done ? 'wieder öffnen' : 'abhaken'}">${icon('check')}</button>
 </article>`;
@@ -114,16 +117,15 @@ function weighIn(ctx) {
 export function todayView(ctx) {
   const { state, s, ui, todayISO } = ctx;
   const iso = ui.day;
-  const dayState = state.days[iso] ?? {};
-  const plan = L.planFor(iso, dayState, WEEK_PLAN);
-  const totals = L.dayTotals(plan, dayState.checked, RECIPES, ITEMS);
+  const day = ctx.dayPlan(iso);
+  const checked = state.days[iso]?.checked ?? {};
+  const totals = P.dayMacros(day, RECIPES, ITEMS, checked);
   const phase = L.phaseOn(s.startDate, iso);
-  const kcalTarget = s.kcal + (phase.phase === 'pause' ? L.PLAN.deficit : 0);
-  const allDone = L.isPlanComplete(plan, dayState.checked);
+  const kcalTarget = P.dayTarget(iso, ctx.planCtx);
   return `${header(ctx, iso, phase)}
 ${weekStrip(ctx, iso)}
 ${banners(ctx, iso, phase, kcalTarget)}
-${summary(ctx, totals, kcalTarget, allDone)}
-<section class="meals" aria-label="Mahlzeiten">${meals(iso, plan, dayState)}</section>
+${summary(ctx, totals, kcalTarget, P.isDayComplete(day, checked))}
+<section class="meals" aria-label="Mahlzeiten">${meals(iso, day, checked)}</section>
 ${iso === todayISO ? weighIn(ctx) : ''}`;
 }

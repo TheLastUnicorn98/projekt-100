@@ -21,6 +21,13 @@ const PATHS = {
   laden: '<path d="M12 20V9M7.5 13.5 12 9l4.5 4.5M5 4.5h14"/>',
   loeschen: '<path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13"/>',
   installieren: '<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M12 7v7M9.5 11.5 12 14l2.5-2.5"/>',
+  ofen: '<rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M7 6.5h.01M10 6.5h.01"/><rect x="7" y="12" width="10" height="5" rx="1"/>',
+  herd: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="12" r="2.5"/><circle cx="15.5" cy="12" r="2"/>',
+  herz: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
+  stern: '<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  zurueck: '<path d="M15 5l-7 7 7 7"/>',
+  undo: '<path d="M4.5 9h10a5 5 0 0 1 0 10H9"/><path d="M8.5 5 4.5 9l4 4"/>',
+  karten: '<rect x="4" y="5" width="11" height="15" rx="2.5"/><path d="M15 7.5l3.3.9a1.5 1.5 0 0 1 1 1.8l-2.8 10.3a1.5 1.5 0 0 1-1.8 1L10 20"/>',
 };
 
 export function icon(name, cls = '') {

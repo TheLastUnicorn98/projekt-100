@@ -41,51 +41,14 @@ export function weekDates(iso) {
   return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 }
 
-// ---------- Nährwerte und Tagesplan ----------
-
-const KEYS = ['kcal', 'protein', 'fat', 'carbs'];
-
-export function sumMacros(list) {
-  const total = { kcal: 0, protein: 0, fat: 0, carbs: 0 };
-  for (const m of list) for (const k of KEYS) total[k] += m[k];
-  return total;
-}
-
-export function recipeMacros(recipe, items) {
-  if (recipe.fixed) return { ...recipe.fixed };
-  return sumMacros(
-    recipe.ingredients.map(({ item, amount }) => {
-      const it = items[item];
-      const f = amount / it.per;
-      return { kcal: it.kcal * f, protein: it.protein * f, fat: it.fat * f, carbs: it.carbs * f };
-    }),
-  );
-}
-
-export function planFor(iso, dayState, weekPlan) {
-  return { ...weekPlan[weekday(iso)], ...(dayState?.swaps ?? {}) };
-}
-
-export function dayTotals(plan, checked, recipes, items) {
-  return sumMacros(
-    Object.entries(plan)
-      .filter(([slot, id]) => id && checked?.[slot])
-      .map(([, id]) => recipeMacros(recipes[id], items)),
-  );
-}
-
-export function isPlanComplete(plan, checked) {
-  const slots = Object.entries(plan).filter(([, id]) => id);
-  return slots.length > 0 && slots.every(([slot]) => checked?.[slot]);
-}
+// ---------- Serie ----------
 
 // Tage in Folge mit komplett abgehaktem Plan. Ist heute noch offen, zählt die Serie ab gestern.
-export function streak(days, todayISO, startISO, weekPlan) {
+export function streak(isComplete, todayISO, startISO) {
   if (!startISO) return 0;
-  const complete = (iso) => isPlanComplete(planFor(iso, days[iso], weekPlan), days[iso]?.checked);
-  let iso = complete(todayISO) ? todayISO : addDays(todayISO, -1);
+  let iso = isComplete(todayISO) ? todayISO : addDays(todayISO, -1);
   let count = 0;
-  while (daysBetween(startISO, iso) >= 0 && complete(iso)) {
+  while (daysBetween(startISO, iso) >= 0 && isComplete(iso)) {
     count += 1;
     iso = addDays(iso, -1);
   }
@@ -198,31 +161,6 @@ export function bmi(kg, heightCm) {
   return heightCm ? kg / (heightCm / 100) ** 2 : null;
 }
 
-// ---------- Einkauf ----------
-
-export function shoppingList(weekPlan, recipes, items, categories) {
-  const totals = new Map();
-  for (const plan of Object.values(weekPlan)) {
-    for (const id of Object.values(plan)) {
-      if (!id) continue;
-      for (const { item, amount } of recipes[id].ingredients) totals.set(item, (totals.get(item) ?? 0) + amount);
-    }
-  }
-  const ids = Object.keys(items).filter((id) => totals.has(id));
-  const row = (id) => ({
-    id,
-    name: items[id].name,
-    amount: Math.round(totals.get(id) * 100) / 100,
-    unit: items[id].unit,
-    showAmount: items[id].showAmount ?? items[id].cat !== 'vorrat',
-  });
-  const groups = categories
-    .map((c) => ({ id: c.id, label: c.label, rows: ids.filter((id) => items[id].cat === c.id).map(row) }))
-    .filter((g) => g.rows.length);
-  const pantry = ids.filter((id) => items[id].cat === 'vorrat').map(row);
-  return { groups, pantry };
-}
-
 // ---------- Formatierung ----------
 
 const formatters = new Map();
@@ -243,5 +181,6 @@ export function formatAmount(amount, unit) {
   if (unit === 'g' && amount >= 1000) return `${upToOneDecimal.format(amount / 1000)} kg`;
   if (unit === 'ml' && amount >= 1000) return `${upToOneDecimal.format(amount / 1000)} l`;
   if (unit === 'Dose') return `${formatNumber(amount)} ${amount === 1 ? 'Dose' : 'Dosen'}`;
+  if (unit === 'Scheibe') return `${formatNumber(amount)} ${amount === 1 ? 'Scheibe' : 'Scheiben'}`;
   return unit ? `${formatNumber(amount)} ${unit}` : '';
 }

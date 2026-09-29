@@ -3,29 +3,69 @@ import assert from 'node:assert/strict';
 import { normalizeState, emptyState, isReady } from '../js/store.js';
 import { niceScale } from '../js/chart.js';
 
+const ready = { startKg: 144.15, targetKg: 100, startDate: '2026-09-30', kcal: 2200 };
+
 test('Unbrauchbare Daten ergeben einen leeren Zustand', () => {
   assert.deepEqual(normalizeState(null), emptyState());
   assert.deepEqual(normalizeState('kaputt'), emptyState());
   assert.equal(isReady(emptyState()), false);
 });
 
-test('Gültige Daten bleiben erhalten, ungültige Einträge fliegen raus', () => {
-  const s = normalizeState({
-    settings: { startKg: 144.15, targetKg: 100, startDate: '2026-09-30', kcal: 2200 },
-    weights: [{ date: '2026-09-30', kg: 144.15 }, { date: 'gestern', kg: 1 }, { date: '2026-10-01', kg: 'x' }],
-    days: {
-      '2026-09-30': {
-        checked: { fruehstueck: true, mittag: 'ja' },
-        swaps: { mittag: 'bowl_thunfisch', abend: 'gibtsnicht', snack: 'porridge' },
+test('Daten aus Version 1 werden übernommen, Ungültiges fliegt raus', () => {
+  const s = normalizeState(
+    {
+      settings: ready,
+      weights: [{ date: '2026-09-30', kg: 144.15 }, { date: 'gestern', kg: 1 }, { date: '2026-10-01', kg: 'x' }],
+      days: {
+        '2026-09-30': {
+          checked: { fruehstueck: true, mittag: 'ja' },
+          swaps: { mittag: 'bowl_thunfisch', abend: 'gibtsnicht', snack: 'porridge' },
+        },
       },
+      shopping: { checked: { reis: true, milch: 1 } },
     },
-    shopping: { checked: { reis: true, milch: 1 } },
-  });
+    { today: '2026-09-30' },
+  );
   assert.equal(isReady(s), true);
   assert.equal(s.settings.protein, 150);
+  assert.equal(s.prefs, null);
   assert.deepEqual(s.weights, [{ date: '2026-09-30', kg: 144.15 }]);
   assert.deepEqual(s.days['2026-09-30'], { checked: { fruehstueck: true }, swaps: { mittag: 'bowl_thunfisch' } });
-  assert.deepEqual(s.shopping.checked, { reis: true });
+  assert.deepEqual(s.shopping['2026-09-28'].checked, { reis: true });
+});
+
+test('Vorlieben, Pläne und Wisch-Ergebnisse werden geprüft', () => {
+  const s = normalizeState({
+    settings: ready,
+    prefs: { devices: ['airfryer', 'toaster'], proteins: ['haehnchen', 'x'], maxTime: 20, freeEvening: true },
+    plans: {
+      '2026-10-05': {
+        week: '2026-10-05',
+        kind: 'gewischt',
+        snacks: ['snack_shake', 'nix'],
+        days: {
+          '2026-10-05': {
+            fruehstueck: { id: 'porridge', side: 70 },
+            mittag: { id: 'bowl_haehnchen', side: 100, leftover: 'ja' },
+            abend: { id: 'abend_huefte', side: 350, cook: 2 },
+            snack: { id: 'porridge' },
+          },
+        },
+      },
+      kaputt: { days: 5 },
+    },
+    swipes: { '2026-10-05': { order: ['porridge', 'nix'], votes: { porridge: 1, nix: 1, quark_bowl: 7 } } },
+  });
+  assert.deepEqual(s.prefs, { devices: ['airfryer'], proteins: ['haehnchen'], maxTime: 20, freeEvening: true });
+  assert.deepEqual(Object.keys(s.plans), ['2026-10-05']);
+  const plan = s.plans['2026-10-05'];
+  assert.deepEqual(plan.snacks, ['snack_shake']);
+  assert.deepEqual(plan.days['2026-10-05'], {
+    fruehstueck: { id: 'porridge', side: 70 },
+    mittag: { id: 'bowl_haehnchen', side: 100 },
+    abend: { id: 'abend_huefte', side: 350, cook: 2 },
+  });
+  assert.deepEqual(s.swipes['2026-10-05'], { order: ['porridge'], votes: { porridge: 1 } });
 });
 
 test('Diagramm-Achse mit runden Werten', () => {
