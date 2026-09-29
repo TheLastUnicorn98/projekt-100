@@ -41,7 +41,14 @@ export function recipeSheet(ctx) {
     meal.cook === 2
       ? `<p class="tip-line">Heute die doppelte Menge kochen. Die zweite Portion ist morgen dein Mittagessen: gleich in eine Dose, abkühlen lassen, ab in den Kühlschrank.</p>`
       : '';
-  const eyebrow = [day ? slotLabel(slot) : KINDS[r.slot], DEVICES[r.device], r.time > 1 ? `${r.time} Min Arbeit` : ''].filter(Boolean).join(' · ');
+  const eyebrow = [
+    day ? slotLabel(slot) : KINDS[r.slot],
+    r.region === 'schwaebisch' ? 'Schwäbisch' : '',
+    DEVICES[r.device],
+    r.time > 1 ? `${r.time} Min Arbeit` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
   const swaps = day && slot && !readOnly ? swapList(ctx, id, slot, ctx.mondayOf(day)) : '';
   return `${head(eyebrow, esc(r.name))}
 ${r.fixed ? '' : `<div class="sheet-photo card-${r.slot}">${icon(r.device, 'card-device')}<img src="img/${id}.webp" alt="" onerror="this.remove()"></div>`}

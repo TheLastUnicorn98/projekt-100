@@ -43,6 +43,20 @@ export const ITEMS = {
   tk_beeren: { name: 'TK-Beeren', unit: 'g', per: 100, kcal: 45, protein: 1, fat: 0.3, carbs: 9, fiber: 4, cat: 'tk' },
   banane: { name: 'Bananen', unit: 'Stück', per: 1, kcal: 110, protein: 1.4, fat: 0.2, carbs: 24, fiber: 2.5, cat: 'obst', one: 'Banane', many: 'Bananen' },
   apfel: { name: 'Äpfel', unit: 'Stück', per: 1, kcal: 80, protein: 0.4, fat: 0.2, carbs: 18, fiber: 3.5, cat: 'obst', one: 'Apfel', many: 'Äpfel' },
+  zwiebeln: { name: 'Zwiebeln', unit: 'g', per: 100, kcal: 40, protein: 1.2, fat: 0.1, carbs: 8, fiber: 1.8, cat: 'obst', veg: true },
+
+  // Schwäbisches
+  laugenbrezel: { name: 'Laugenbrezeln', unit: 'Stück', per: 1, kcal: 220, protein: 7, fat: 2, carbs: 43, fiber: 2, cat: 'trocken', one: 'Laugenbrezel', many: 'Laugenbrezeln' },
+  maultaschen: { name: 'Maultaschen (Kühlregal)', unit: 'Stück', per: 1, kcal: 156, protein: 6.5, fat: 6.4, carbs: 17.3, fiber: 1.2, cat: 'kuehl', one: 'Maultasche', many: 'Maultaschen' },
+  spaetzle: { name: 'Spätzle (Kühlregal)', unit: 'g', per: 100, kcal: 188, protein: 7, fat: 2.5, carbs: 34, fiber: 1.5, cat: 'kuehl' },
+  schupfnudeln: { name: 'Schupfnudeln (Kühlregal)', unit: 'g', per: 100, kcal: 160, protein: 4, fat: 1, carbs: 33, fiber: 2, cat: 'kuehl' },
+  linsen: { name: 'Linsen (Dose, abgetropft)', unit: 'g', per: 100, kcal: 110, protein: 8, fat: 0.5, carbs: 16, fiber: 6, cat: 'trocken', veg: true },
+  sauerkraut: { name: 'Sauerkraut', unit: 'g', per: 100, kcal: 20, protein: 1.5, fat: 0.3, carbs: 1, fiber: 3, cat: 'trocken', veg: true },
+  tk_suppengemuese: { name: 'TK-Suppengemüse', unit: 'g', per: 100, kcal: 30, protein: 1.5, fat: 0.3, carbs: 5, fiber: 2.5, cat: 'tk', veg: true },
+  gefluegelwiener: { name: 'Geflügel-Wiener', unit: 'g', per: 100, kcal: 190, protein: 14, fat: 14, carbs: 1, fiber: 0, cat: 'kuehl' },
+  kasseler: { name: 'Kasseler, mager', unit: 'g', per: 100, kcal: 130, protein: 21, fat: 5, carbs: 0.5, fiber: 0, cat: 'fleisch' },
+  kaese_light: { name: 'Reibekäse light', unit: 'g', per: 100, kcal: 270, protein: 29, fat: 17, carbs: 0.5, fiber: 0, cat: 'kuehl' },
+  bruehe: { name: 'Gemüsebrühe (Pulver)', unit: 'TL', per: 1, kcal: 10, protein: 0.3, fat: 0.5, carbs: 1, fiber: 0, cat: 'vorrat' },
 
   whey: { name: 'Impact Whey', unit: 'g', per: 100, kcal: 400, protein: 76.7, fat: 6.7, carbs: 6.7, fiber: 0, cat: 'vorrat', showAmount: true },
   nuesse: { name: 'Nüsse, ungesalzen', unit: 'g', per: 100, kcal: 633, protein: 20, fat: 53.3, carbs: 10, fiber: 8, cat: 'trocken' },

@@ -104,6 +104,16 @@ export const RECIPES = {
     ],
     steps: ['Apfel klein schneiden, mit Haferflocken und gehackten Nüssen auf den Skyr.'],
   },
+  laugenbrezel_huettenkaese: {
+    name: 'Laugenbrezel mit Hüttenkäse', slot: 'fruehstueck', device: 'ohne', time: 3, proteins: ['milch'], region: 'schwaebisch',
+    ingredients: [
+      { item: 'laugenbrezel', amount: 1, side: [1, 3, 1] },
+      { item: 'huettenkaese', amount: 200 },
+      { item: 'rohkost', amount: 100, note: 'Radieschen und Gurke' },
+      { item: 'gewuerz', amount: 0, text: 'Schnittlauch, Salz' },
+    ],
+    steps: ['Brezel aufschneiden, mit Hüttenkäse und Schnittlauch füllen.', 'Radieschen und Gurke dazu.'],
+  },
 
   // ---------- Hauptgerichte ----------
   bowl_haehnchen: {
@@ -406,6 +416,123 @@ export const RECIPES = {
       { item: 'gewuerz', amount: 0, text: 'Salz, Pfeffer, Schnittlauch' },
     ],
     steps: ['Kartoffeln halbieren und bei 200 °C etwa 25 Minuten in den Airfryer.', GEMUESE, 'Hüttenkäse würzen und auf die heißen Kartoffeln geben.'],
+  },
+
+  // ---------- Schwäbisch, leichter gekocht ----------
+  maultaschen_ei: {
+    name: 'Maultaschen mit Ei und Spinat', slot: 'haupt', device: 'herd', time: 15, proteins: ['schwein', 'ei'], region: 'schwaebisch',
+    ingredients: [
+      { item: 'maultaschen', amount: 3, side: [2, 6, 1] },
+      { item: 'eier', amount: 3 },
+      { item: 'tk_spinat', amount: 250 },
+      { item: 'zwiebeln', amount: 50 },
+      { item: 'oel', amount: 1 },
+    ],
+    steps: [
+      'Maultaschen in Streifen schneiden und mit der gewürfelten Zwiebel im Öl anbraten.',
+      'Spinat dazugeben, bis er aufgetaut ist.',
+      'Eier verquirlen, drübergießen und stocken lassen. Salzen, pfeffern.',
+    ],
+    tip: 'Der Klassiker „Maultaschen mit Ei“, hier mit Spinat statt viel Butter.',
+  },
+  linsen_spaetzle: {
+    name: 'Linsen mit Spätzle und Saitenwürstle', slot: 'haupt', device: 'herd', time: 15, proteins: ['haehnchen'], region: 'schwaebisch',
+    ingredients: [
+      { item: 'linsen', amount: 250 },
+      { item: 'tk_suppengemuese', amount: 150 },
+      { item: 'spaetzle', amount: 125, side: [75, 300, 25] },
+      { item: 'gefluegelwiener', amount: 100, note: 'als Saitenwürstle' },
+      { item: 'bruehe', amount: 1 },
+      { item: 'gewuerz', amount: 0, text: 'Essig, Senf, Pfeffer' },
+    ],
+    steps: [
+      'Suppengemüse mit der Brühe in 100 ml Wasser 5 Minuten kochen, Linsen dazu, mit einem Schuss Essig abschmecken.',
+      'Die Würstle 5 Minuten in heißem Wasser ziehen lassen, nicht kochen, sonst platzen sie.',
+      'Spätzle in der Pfanne oder Mikrowelle erwärmen.',
+    ],
+  },
+  kartoffelsalat_pute: {
+    name: 'Schwäbischer Kartoffelsalat mit Putenschnitzel', slot: 'haupt', device: 'airfryer', alt: ['ofen'], time: 20, proteins: ['pute'], region: 'schwaebisch',
+    ingredients: [
+      { item: 'kartoffeln', amount: 350, side: [200, 900, 50] },
+      { item: 'putenbrust', amount: 220, note: 'als dünne Schnitzel' },
+      { item: 'rohkost', amount: 200, note: 'Gurke und Feldsalat' },
+      { item: 'zwiebeln', amount: 50 },
+      { item: 'bruehe', amount: 1 },
+      { item: 'oel', amount: 2 },
+      { item: 'gewuerz', amount: 0, text: 'Essig, Senf, Salz, Pfeffer' },
+    ],
+    steps: [
+      'Kartoffeln im Reiskocher oder Topf garen, pellen und in dünne Scheiben schneiden.',
+      'Zwiebel fein hacken, mit 100 ml heißer Brühe, Essig, Senf und Öl verrühren und über die warmen Kartoffeln gießen. 10 Minuten ziehen lassen, dann wird er schön schlonzig.',
+      'Schnitzel salzen und pfeffern, bei 200 °C 8–10 Minuten in den Airfryer, einmal wenden.',
+      'Gurke und Feldsalat dazu.',
+    ],
+  },
+  gaisburger_marsch: {
+    name: 'Schneller Gaisburger Marsch', slot: 'haupt', device: 'herd', time: 20, proteins: ['rind'], region: 'schwaebisch',
+    ingredients: [
+      { item: 'rinderhuefte', amount: 200, note: 'in dünnen Streifen' },
+      { item: 'kartoffeln', amount: 250, side: [100, 700, 50] },
+      { item: 'spaetzle', amount: 60 },
+      { item: 'tk_suppengemuese', amount: 250 },
+      { item: 'zwiebeln', amount: 50 },
+      { item: 'bruehe', amount: 2 },
+    ],
+    steps: [
+      'Kartoffeln würfeln und mit Suppengemüse und Brühe in 600 ml Wasser 12 Minuten kochen.',
+      'Fleischstreifen und Spätzle dazu und 3 Minuten ziehen lassen.',
+      'Zwiebel in Ringen ohne Fett in der Pfanne bräunen und obendrauf geben.',
+    ],
+    tip: 'Das Original köchelt stundenlang mit Suppenfleisch. Mit dünnen Hüftstreifen geht es in 20 Minuten.',
+  },
+  zwiebelrostbraten: {
+    name: 'Zwiebelrostbraten mit Spätzle', slot: 'haupt', device: 'herd', time: 20, proteins: ['rind'], region: 'schwaebisch',
+    ingredients: [
+      { item: 'rinderhuefte', amount: 200 },
+      { item: 'spaetzle', amount: 150, side: [75, 300, 25] },
+      { item: 'zwiebeln', amount: 150 },
+      { item: 'tk_bohnen', amount: 250 },
+      { item: 'oel', amount: 2 },
+      { item: 'gewuerz', amount: 0, text: 'Senf, Salz, Pfeffer' },
+    ],
+    steps: [
+      'Zwiebeln in Ringen mit 1 TL Öl langsam goldbraun braten und herausnehmen.',
+      'Steak dünn mit Senf bestreichen und im restlichen Öl 2–3 Minuten pro Seite braten.',
+      'Spätzle und Bohnen in der Pfanne erwärmen, die Zwiebeln aufs Fleisch.',
+    ],
+  },
+  kaesespaetzle_light: {
+    name: 'Käsespätzle, leichter', slot: 'haupt', device: 'herd', time: 15, proteins: ['milch'], region: 'schwaebisch',
+    ingredients: [
+      { item: 'spaetzle', amount: 200, side: [100, 350, 25] },
+      { item: 'kaese_light', amount: 60, note: 'gerieben' },
+      { item: 'skyr', amount: 100 },
+      { item: 'zwiebeln', amount: 100 },
+      { item: 'rohkost', amount: 200, note: 'grüner Salat dazu' },
+      { item: 'oel', amount: 1 },
+    ],
+    steps: [
+      'Zwiebeln in Ringen mit dem Öl goldbraun braten.',
+      'Spätzle in der Pfanne erwärmen, Skyr und Käse unterrühren, bis alles schmilzt. Salzen, pfeffern.',
+      'Zwiebeln obendrauf, Salat dazu.',
+    ],
+    tip: 'Skyr statt Sahne und leichter Käse sparen gut die Hälfte der Kalorien.',
+  },
+  schupfnudeln_sauerkraut: {
+    name: 'Schupfnudeln mit Sauerkraut und Kasseler', slot: 'haupt', device: 'herd', time: 15, proteins: ['schwein'], region: 'schwaebisch',
+    ingredients: [
+      { item: 'schupfnudeln', amount: 200, side: [100, 400, 25] },
+      { item: 'sauerkraut', amount: 250 },
+      { item: 'kasseler', amount: 200, note: 'in Würfeln' },
+      { item: 'zwiebeln', amount: 50 },
+      { item: 'oel', amount: 1 },
+    ],
+    steps: [
+      'Kasseler und Zwiebel im Öl anbraten.',
+      'Schupfnudeln dazu und goldbraun braten.',
+      'Sauerkraut unterheben und 5 Minuten mitbraten.',
+    ],
   },
   frei: {
     name: 'Freier Abend', slot: 'haupt', device: 'frei', time: 0, proteins: [],

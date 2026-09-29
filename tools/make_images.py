@@ -66,6 +66,14 @@ DISHES = {
     "huettenkaese_rohkost": "a bowl of cottage cheese with cucumber, carrot and bell pepper sticks for dipping",
     "quark_apfel": "a bowl of creamy quark with diced apple and a sprinkle of cinnamon",
     "eier_airfryer": "two halved hard-boiled eggs with cucumber and carrot sticks",
+    "laugenbrezel_huettenkaese": "a German lye pretzel (Laugenbrezel) sliced open and filled with cottage cheese and chives, radishes and cucumber slices on the side",
+    "maultaschen_ei": "Swabian Maultaschen: large flat rectangular German pasta pockets filled with meat and spinach, cut into wide strips, pan-fried with scrambled egg and spinach in a pan, no round dumplings, no gyoza",
+    "linsen_spaetzle": "a plate of brown lentil stew with carrots, next to irregular short squiggly homemade Swabian egg noodles (Spaetzle, thick uneven little dumpling strands, not macaroni, not pasta tubes), and two Wiener sausages",
+    "kartoffelsalat_pute": "Swabian potato salad with thinly sliced potatoes in a glossy vinegar broth dressing with chives, a golden thin turkey schnitzel, cucumber and lamb's lettuce",
+    "gaisburger_marsch": "Gaisburger Marsch, a hearty German beef stew with potato cubes, Spaetzle egg noodles, carrots and celery in clear broth, topped with golden fried onions, in a deep bowl",
+    "zwiebelrostbraten": "Zwiebelrostbraten: a pan-seared sirloin steak topped with a heap of thin golden fried onion strips (not breaded rings), with irregular short squiggly homemade Swabian egg noodles (Spaetzle, thick uneven little dumpling strands, not macaroni, not pasta tubes) and green beans, brown gravy",
+    "kaesespaetzle_light": "Kaesespaetzle in a cast iron pan: irregular short squiggly homemade Swabian egg noodles (Spaetzle, thick uneven little dumpling strands, not macaroni, not pasta tubes) mixed with melted cheese, topped with crispy fried onion strips, a small green salad beside",
+    "schupfnudeln_sauerkraut": "Schupfnudeln, German potato finger noodles pan-fried golden with sauerkraut and diced smoked pork loin in a pan",
 }
 
 

@@ -1,6 +1,6 @@
 // Offline-Speicher. Bei jeder Änderung an der App die Versionsnummer erhöhen,
 // sonst bekommen installierte Handys die neuen Dateien nicht.
-const CACHE = 'projekt100-v3';
+const CACHE = 'projekt100-v4';
 const CORE = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const CORE = [
   './js/recipes.js',
   './js/planner.js',
   './js/gesture.js',
+  './js/fx.js',
   './js/logic.js',
   './js/store.js',
   './js/chart.js',
@@ -37,7 +38,8 @@ const PHOTOS = [
   'abend_brust_reis', 'abend_schenkel_reis', 'haehnchen_wrap', 'haehnchen_suesskartoffel', 'pute_paprika_reis', 'pute_gyros',
   'abend_huefte', 'chili_con_carne', 'hack_reis_pfanne', 'burger_bowl', 'abend_schweinelachs', 'schwein_bowl', 'lachs_reis',
   'kabeljau_kartoffel', 'thunfisch_nudeln', 'garnelen_reis', 'shakshuka', 'ofenkartoffel_huettenkaese', 'snack_nuesse',
-  'snack_shake', 'skyr_beeren', 'protein_pudding', 'reiswaffeln_erdnuss', 'huettenkaese_rohkost', 'quark_apfel', 'eier_airfryer',
+  'snack_shake', 'skyr_beeren', 'protein_pudding', 'reiswaffeln_erdnuss', 'huettenkaese_rohkost', 'quark_apfel', 'eier_airfryer', 'laugenbrezel_huettenkaese', 'maultaschen_ei', 'linsen_spaetzle',
+  'kartoffelsalat_pute', 'gaisburger_marsch', 'zwiebelrostbraten', 'kaesespaetzle_light', 'schupfnudeln_sauerkraut',
 ].map((id) => `./img/${id}.webp`);
 
 self.addEventListener('install', (event) => {

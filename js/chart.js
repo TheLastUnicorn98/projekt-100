@@ -83,7 +83,7 @@ export function weightChart({ entries, startISO, startKg, targetKg, fromISO, toI
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gewichtsverlauf mit Plan-Linie">
 <g class="c-grid">${grid}</g><g class="c-lab">${yLab}${xLab}</g>${goal}
 <polyline class="c-plan" points="${line(plan)}"/>
-${avg.length > 1 ? `<polyline class="c-avg" points="${line(avg)}"/>` : ''}
+${avg.length > 1 ? `<polyline class="c-avg" pathLength="1" points="${line(avg)}"/>` : ''}
 <g class="c-dots">${dots}</g>${lastDot}
 </svg>`;
 }

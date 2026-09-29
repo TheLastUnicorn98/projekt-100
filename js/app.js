@@ -1,10 +1,11 @@
 import { RECIPES } from './recipes.js';
-import { ITEMS, WEEK_PLAN, STANDARD_SNACKS, DEFAULT_PREFS } from './data.js';
+import { ITEMS, WEEK_PLAN, STANDARD_SNACKS, DEFAULT_PREFS, CATEGORIES } from './data.js';
 import * as L from './logic.js';
 import * as P from './planner.js';
 import { loadState, saveState, normalizeState, isReady, emptyState } from './store.js';
 import { icon, esc, parseNum } from './ui.js';
 import { attachSwipe } from './gesture.js';
+import * as FX from './fx.js';
 import { todayView } from './views/today.js';
 import { weekView } from './views/week.js';
 import { shopView } from './views/shop.js';
@@ -44,6 +45,8 @@ const ui = {
   preview: null,
   planSeed: 1,
   draftPrefs: structuredClone(DEFAULT_PREFS),
+  fx: null,
+  entering: true,
 };
 
 // ---------- Pläne ----------
@@ -141,8 +144,100 @@ function render() {
   const sheet = ui.sheet
     ? `<div class="scrim" data-action="close-sheet"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">${ui.sheet.type === 'recipe' ? recipeSheet(ctx) : settingsSheet(ctx)}</div>`
     : '';
-  root.innerHTML = `<main class="view view-${ui.tab}">${VIEWS[ui.tab](ctx)}</main>${nav}${sheet}${toastHTML()}`;
+  root.innerHTML = `<main class="view view-${ui.tab}${ui.entering ? ' is-entering' : ''}">${VIEWS[ui.tab](ctx)}</main>${nav}${sheet}${toastHTML()}`;
   if (ui.tab === 'wischen' && !ui.sheet) attachDeck();
+  afterRender(ctx);
+  ui.entering = false;
+}
+
+function viewTransition(update) {
+  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(update);
+  else update();
+}
+
+// ---------- Bewegung ----------
+// Die Ansicht wird bei jeder Änderung neu gezeichnet. Damit Ringe und Zahlen trotzdem gleiten,
+// merkt sich `memo` die letzten Werte und die Effekte starten vom alten Stand aus.
+
+const memo = { rings: {}, nums: {}, shopPct: {}, streak: null };
+const fmt0 = (v) => L.formatNumber(v, 0);
+const fmt1 = (v) => L.formatNumber(v, 1);
+
+function afterRender(ctx) {
+  const main = root.querySelector('main');
+  if (!main) return;
+
+  if (ui.tab === 'heute') {
+    const prev = memo.rings[ui.day] ?? {};
+    const next = {};
+    for (const cls of ['ring-kcal', 'ring-protein']) {
+      const circle = main.querySelector(`.rings .${cls}`);
+      if (!circle) continue;
+      FX.tweenRing(circle, prev[cls] ?? Number(circle.getAttribute('stroke-dasharray')));
+      next[cls] = Number(circle.getAttribute('stroke-dashoffset'));
+    }
+    memo.rings[ui.day] = next;
+    for (const el of main.querySelectorAll('.summary .num')) {
+      const key = `${ui.day}:${el.dataset.key}`;
+      const to = Number(el.dataset.num);
+      FX.countUp(el, memo.nums[key] ?? 0, to, fmt0);
+      memo.nums[key] = to;
+    }
+    const chip = main.querySelector('.chip-streak');
+    if (chip && memo.streak !== null && ctx.streak > memo.streak) {
+      FX.pop(chip, 1.4);
+      FX.confettiFrom(chip, { count: 40, spread: 40, power: 8 });
+    }
+    memo.streak = ctx.streak;
+  }
+
+  if (ui.tab === 'verlauf' && ui.entering) {
+    for (const el of main.querySelectorAll('.stat .num')) FX.countUp(el, 0, Number(el.dataset.num), fmt1, 900);
+  }
+
+  if (ui.tab === 'einkauf') {
+    const bar = main.querySelector('.progress-bar i');
+    const pct = parseFloat(bar?.style.width) || 0;
+    const key = shopMonday();
+    if (bar && memo.shopPct[key] !== undefined && memo.shopPct[key] !== pct) FX.tweenWidth(bar, memo.shopPct[key]);
+    else if (bar && ui.entering) FX.tweenWidth(bar, 0, 800);
+    memo.shopPct[key] = pct;
+  }
+
+  const fx = ui.fx;
+  ui.fx = null;
+  if (!fx) return;
+  if (fx.type === 'check') {
+    const btn = main.querySelector(`.check[data-slot="${fx.slot}"]`);
+    FX.pop(btn, fx.on ? 1.3 : 0.88);
+    if (fx.on) {
+      FX.flash(btn?.closest('.meal'), 'fx-done');
+      FX.haptic(15);
+    }
+    if (fx.completed) {
+      FX.confettiFrom(main.querySelector('.summary'), { count: 130 });
+      FX.haptic([20, 40, 30]);
+    }
+  } else if (fx.type === 'shop') {
+    FX.pop(main.querySelector(`.shop-row[data-id="${fx.id}"] .box`), 1.35);
+    if (fx.on) FX.haptic(10);
+    if (fx.allDone) FX.confettiFrom(main.querySelector('.progress'), { count: 110 });
+  } else if (fx.type === 'weight') {
+    FX.haptic([30, 50, 30]);
+    FX.fireworks(fx.milestone != null ? 7 : 3);
+  } else if (fx.type === 'vote') {
+    if (fx.vote > 0) {
+      const colors = fx.vote === 2 ? ['#3d9bff', '#ffd21f', '#8ccfb2'] : ['#22c47a', '#8ccfb2', '#5cbf86'];
+      FX.confettiFrom(main.querySelector('.deck'), { count: fx.vote === 2 ? 70 : 26, spread: 40, power: 9, colors });
+    }
+    FX.haptic(fx.vote > 0 ? 12 : 6);
+  } else if (fx.type === 'plan') {
+    FX.fireworks(4);
+    FX.confetti({ count: 140 });
+    FX.haptic([20, 40, 20, 40, 40]);
+  } else if (fx.type === 'prefs') {
+    FX.confetti({ count: 100 });
+  }
 }
 
 function attachDeck() {
@@ -202,6 +297,7 @@ function closeSheet() {
 function castVote(id, vote) {
   ensureSwipe(nextMondayISO()).votes[id] = vote;
   ui.swipeHistory.push(id);
+  ui.fx = { type: 'vote', vote };
   persist();
 }
 
@@ -266,8 +362,13 @@ const forms = {
     const kg = parseNum(v.kg);
     if (!(kg >= 30 && kg <= 400)) return showFormError(form, 'Bitte ein Gewicht zwischen 30 und 400 kg eingeben, zum Beispiel 120,4.');
     const date = /^\d{4}-\d{2}-\d{2}$/.test(v.date ?? '') && v.date <= today() ? v.date : today();
+    const before = L.bestAverage(L.normalizeWeights(state.weights));
     state.weights = L.normalizeWeights([...state.weights, { date, kg }]);
-    persist('Gewicht gespeichert');
+    const after = L.bestAverage(state.weights);
+    const s = state.settings;
+    const reached = L.milestones(s.startKg, s.targetKg).find((m) => after <= m + 1e-9 && !(before <= m + 1e-9));
+    ui.fx = { type: 'weight', milestone: reached ?? null };
+    persist(reached != null ? `Etappe ${L.formatNumber(reached, reached % 1 ? 1 : 0)} kg geschafft!` : 'Gewicht gespeichert');
   },
 };
 
@@ -286,10 +387,11 @@ function exportBackup() {
 // ---------- Aktionen ----------
 
 const actions = {
-  'pick-day': (el) => {
-    ui.day = el.dataset.day;
-    render();
-  },
+  'pick-day': (el) =>
+    viewTransition(() => {
+      ui.day = el.dataset.day;
+      render();
+    }),
   'go-today': () => {
     ui.day = today();
     render();
@@ -297,9 +399,11 @@ const actions = {
   check: (el) => {
     const d = dayState(ui.day);
     const { slot } = el.dataset;
-    if (d.checked[slot]) delete d.checked[slot];
-    else d.checked[slot] = true;
-    persist();
+    const on = !d.checked[slot];
+    if (on) d.checked[slot] = true;
+    else delete d.checked[slot];
+    ui.fx = { type: 'check', slot, on, completed: on && P.isDayComplete(dayPlan(ui.day), d.checked) };
+    persist(ui.fx.completed ? 'Alles abgehakt. Starker Tag!' : undefined);
   },
   'open-recipe': (el) => openSheet({ type: 'recipe', id: el.dataset.id, slot: el.dataset.slot, day: el.dataset.day || null }),
   swap: (el) => {
@@ -328,11 +432,16 @@ const actions = {
     render();
   },
   'shop-toggle': (el) => {
-    const c = (state.shopping[shopMonday()] ??= { checked: {} }).checked;
+    const monday = shopMonday();
+    const c = (state.shopping[monday] ??= { checked: {} }).checked;
     const { id } = el.dataset;
-    if (c[id]) delete c[id];
-    else c[id] = true;
-    persist();
+    const on = !c[id];
+    if (on) c[id] = true;
+    else delete c[id];
+    const rows = P.shoppingForPlan(weekPlan(monday), RECIPES, ITEMS, CATEGORIES).groups.flatMap((g) => g.rows);
+    const allDone = on && rows.every((r) => c[r.id]);
+    ui.fx = { type: 'shop', id, on, allDone };
+    persist(allDone ? 'Alles im Wagen!' : undefined);
   },
   'shop-reset': () => {
     ui.confirm = 'shop-reset';
@@ -401,6 +510,7 @@ const actions = {
     ui.preview = null;
     ui.weekSel = 'next';
     ui.shopSel = 'next';
+    ui.fx = { type: 'plan' };
     saveState(state);
     toast('Plan für nächste Woche gespeichert');
     location.hash = '#woche';
@@ -421,6 +531,8 @@ const actions = {
   },
   'prefs-save': () => {
     state.prefs = structuredClone(ui.draftPrefs);
+    ui.fx = { type: 'prefs' };
+    ui.entering = true;
     persist("Los geht's");
     window.scrollTo(0, 0);
   },
@@ -494,20 +606,21 @@ document.addEventListener('keydown', (e) => {
   } else if (e.key === 'Backspace') actions['swipe-undo']();
 });
 
-window.addEventListener('hashchange', () => {
-  ui.tab = tabFromHash();
-  ui.confirm = null;
-  render();
-  window.scrollTo(0, 0);
-});
+window.addEventListener('hashchange', () =>
+  viewTransition(() => {
+    ui.tab = tabFromHash();
+    ui.confirm = null;
+    ui.entering = true;
+    render();
+    window.scrollTo(0, 0);
+  }),
+);
 
-// Zurück-Taste von Android schließt zuerst ein offenes Fenster.
+// Zurück-Taste von Android schließt zuerst ein offenes Fenster. Tabwechsel erledigt `hashchange`.
 window.addEventListener('popstate', () => {
-  if (ui.sheet) {
-    ui.sheet = null;
-    document.body.classList.remove('has-sheet');
-  }
-  ui.tab = tabFromHash();
+  if (!ui.sheet) return;
+  ui.sheet = null;
+  document.body.classList.remove('has-sheet');
   render();
 });
 

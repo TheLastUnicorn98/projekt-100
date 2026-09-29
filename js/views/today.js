@@ -67,8 +67,8 @@ function summary(ctx, totals, kcalTarget, allDone) {
   return `<section class="card summary" aria-label="Tagesbilanz">
   ${rings({ kcal: totals.kcal, kcalTarget, protein: totals.protein, proteinTarget: s.protein })}
   <div class="summary-text">
-    <p class="big kcal-ink">${fmt(totals.kcal)} <span>/ ${fmt(kcalTarget)} kcal</span></p>
-    <p class="big protein-ink">${fmt(totals.protein)} <span>/ ${fmt(s.protein)} g Eiweiß</span></p>
+    <p class="big kcal-ink"><span class="num" data-num="${Math.round(totals.kcal)}" data-key="kcal">${fmt(totals.kcal)}</span> <span>/ ${fmt(kcalTarget)} kcal</span></p>
+    <p class="big protein-ink"><span class="num" data-num="${Math.round(totals.protein)}" data-key="protein">${fmt(totals.protein)}</span> <span>/ ${fmt(s.protein)} g Eiweiß</span></p>
     <p class="muted small">${note}</p>
   </div>
 </section>`;

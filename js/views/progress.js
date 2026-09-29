@@ -12,10 +12,11 @@ function tiles(ctx, current, hasRecent) {
   const pct = Math.max(0, Math.min(100, (lost / (s.startKg - s.targetKg)) * 100));
   const projected = L.projectDate(entries, s.targetKg, todayISO);
   const bmi = L.bmi(current, s.heightCm);
+  const num = (v) => `<span class="num" data-num="${round1(v)}" data-dec="1">${fmt(v, 1)}</span> kg`;
   const list = [
-    ['Aktuell', kgText(round1(current)), hasRecent ? `Schnitt der letzten 7 Tage${bmi ? ` · BMI ${fmt(bmi, 1)}` : ''}` : 'Letzte Messung'],
-    ['Abgenommen', `${fmt(lost, 1)} kg`, `${fmt(pct)} % vom Weg`],
-    ['Noch bis zum Ziel', `${fmt(Math.max(0, current - s.targetKg), 1)} kg`, `Ziel ${kgLabel(s.targetKg)} kg`],
+    ['Aktuell', num(round1(current)), hasRecent ? `Schnitt der letzten 7 Tage${bmi ? ` · BMI ${fmt(bmi, 1)}` : ''}` : 'Letzte Messung'],
+    ['Abgenommen', num(lost), `${fmt(pct)} % vom Weg`],
+    ['Noch bis zum Ziel', num(Math.max(0, current - s.targetKg)), `Ziel ${kgLabel(s.targetKg)} kg`],
     projected
       ? ['Am Ziel etwa', dateShort(projected), `Nach deinem Trend. Plan: ${dateShort(planEnd)}`]
       : ['Am Ziel laut Plan', dateShort(planEnd), 'Deine eigene Prognose kommt nach einer Woche Wiegen.'],

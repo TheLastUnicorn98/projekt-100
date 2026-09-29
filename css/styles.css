@@ -1761,3 +1761,239 @@ a.icon-btn {
   border-color: var(--brand);
   color: var(--brand-ink);
 }
+
+/* Schwäbische Gerichte: gelb-schwarz wie das Landeswappen */
+.card-region {
+  position: absolute;
+  top: 50px;
+  left: 14px;
+  z-index: 2;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #ffd21f;
+  color: #141414;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+/* ---------- Bewegung ---------- */
+
+:root {
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.big .num {
+  font: inherit;
+  color: inherit;
+}
+
+.fx-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Antippen fühlt sich an wie ein echter Knopf */
+.btn,
+.meal-open,
+.week-row,
+.shop-row,
+.swap,
+.day,
+.chip-toggle,
+.icon-btn,
+.seg button {
+  transition: transform 0.12s ease, background-color 0.2s ease;
+}
+
+.btn:active,
+.meal-open:active,
+.week-row:active,
+.shop-row:active,
+.swap:active,
+.day:active,
+.chip-toggle:active,
+.icon-btn:active,
+.seg button:active {
+  transform: scale(0.96);
+}
+
+/* Beim Öffnen eines Bereichs fliegen die Teile nacheinander ein */
+.is-entering > * {
+  animation: rise-in 0.5s var(--ease-out) both;
+}
+
+.is-entering > :nth-child(2) { animation-delay: 40ms; }
+.is-entering > :nth-child(3) { animation-delay: 80ms; }
+.is-entering > :nth-child(4) { animation-delay: 120ms; }
+.is-entering > :nth-child(5) { animation-delay: 160ms; }
+.is-entering > :nth-child(6) { animation-delay: 200ms; }
+.is-entering > :nth-child(7) { animation-delay: 240ms; }
+.is-entering > :nth-child(n + 8) { animation-delay: 280ms; }
+
+.is-entering .meals > * {
+  animation: rise-in 0.5s var(--ease-out) both;
+}
+
+.is-entering .meals > :nth-child(2) { animation-delay: 220ms; }
+.is-entering .meals > :nth-child(3) { animation-delay: 280ms; }
+.is-entering .meals > :nth-child(4) { animation-delay: 340ms; }
+.is-entering .meals > :nth-child(5) { animation-delay: 400ms; }
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* Weicher Wechsel zwischen den Bereichen, die Leiste unten bleibt stehen */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.22s;
+}
+
+.tabbar {
+  view-transition-name: tabbar;
+}
+
+.tab.is-active .ico {
+  view-transition-name: tab-pill;
+}
+
+::view-transition-group(tab-pill) {
+  animation-duration: 0.35s;
+  animation-timing-function: var(--spring);
+}
+
+/* Verlauf: die Linie zeichnet sich, die Etappen ploppen auf */
+.is-entering .c-avg {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 1.4s var(--ease-out) 0.2s forwards;
+}
+
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.is-entering .c-dots circle {
+  animation: fade-in 0.6s ease 0.7s both;
+}
+
+.c-last {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  50% {
+    transform: scale(1.35);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.is-entering .milestones li {
+  animation: pop-in 0.45s var(--spring) both;
+}
+
+.is-entering .milestones li:nth-child(2) { animation-delay: 60ms; }
+.is-entering .milestones li:nth-child(3) { animation-delay: 120ms; }
+.is-entering .milestones li:nth-child(4) { animation-delay: 180ms; }
+.is-entering .milestones li:nth-child(5) { animation-delay: 240ms; }
+.is-entering .milestones li:nth-child(6) { animation-delay: 300ms; }
+.is-entering .milestones li:nth-child(n + 7) { animation-delay: 360ms; }
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+.milestones li.is-next {
+  animation: glow 2.4s ease-in-out infinite;
+}
+
+.is-entering .milestones li.is-next {
+  animation: pop-in 0.45s var(--spring) both, glow 2.4s ease-in-out 0.8s infinite;
+}
+
+@keyframes glow {
+  50% {
+    box-shadow: inset 0 0 0 2px var(--kcal), 0 0 0 6px color-mix(in srgb, var(--kcal) 25%, transparent);
+  }
+}
+
+/* Serie: die Flamme flackert */
+.chip-streak .ico {
+  transform-origin: 50% 90%;
+  animation: flicker 1.8s ease-in-out infinite;
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    transform: rotate(-4deg) scale(1);
+  }
+  50% {
+    transform: rotate(4deg) scale(1.12);
+  }
+}
+
+/* Abgehakte Mahlzeit leuchtet kurz grün auf */
+.meal.fx-done {
+  animation: done-flash 0.7s ease;
+}
+
+@keyframes done-flash {
+  from {
+    background: color-mix(in srgb, var(--ok) 28%, var(--surface));
+  }
+}
+
+/* Fenster von unten federt, das Foto zoomt sanft */
+.sheet {
+  animation: rise 0.42s cubic-bezier(0.32, 1.25, 0.6, 1);
+}
+
+.sheet-photo img {
+  animation: settle 1.1s var(--ease-out) both;
+}
+
+@keyframes settle {
+  from {
+    transform: scale(1.08);
+  }
+}
+
+.toast {
+  animation: toast-in 0.4s var(--spring);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 18px) scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
