@@ -19,6 +19,9 @@ const WALKERS = [
   { id: 'schaf', w: 10, h: 6, speed: 6, weight: 2, herd: 3 },
   { id: 'huhn', w: 7, h: 7, speed: 11, weight: 1.5, gait: 'hop' },
 ];
+// Hänger: ein Kumpel im Audi-Kombi mit Anhänger. Fährt ab und zu durch und schubst alle vom Weg.
+const HAENGER = { id: 'haenger', w: 41, h: 9, speed: 50 };
+const STARS = ['#ffd21f', '#ffffff', '#ffe98a'];
 const CLOUDS = [
   { id: 'wolke1', w: 34, h: 10 },
   { id: 'wolke2', w: 24, h: 8 },
@@ -390,6 +393,65 @@ function createScene(main, arena, { round, monster: id, sound }) {
     }
   }
 
+  // Wer vom Hänger erwischt wird, fliegt mit Salto in die Wiese.
+  function knock(w, dir) {
+    const p = px();
+    w.classList.add('is-hit');
+    w.getAnimations().forEach((an) => {
+      if (!(an instanceof CSSAnimation)) an.pause();
+    });
+    const m = new DOMMatrixReadOnly(getComputedStyle(w).transform);
+    const flip = m.a < 0 ? ' scaleX(-1)' : '';
+    const x = m.m41;
+    const side = dir * rand(14, 26) * p;
+    const up = rand(14, 24) * p;
+    const down = rand(6, 14) * p;
+    const s = stage.getBoundingClientRect();
+    const r = w.getBoundingClientRect();
+    sfx('bonk');
+    burst(r.left - s.left + r.width / 2, r.top - s.top + r.height / 2, { n: 6, colors: STARS, spread: 8, rise: 10, ms: 500 });
+    vanish(
+      w,
+      animate(
+        w,
+        [
+          { transform: `translateX(${x}px)${flip} rotate(0deg)` },
+          { transform: `translate(${x + side * 0.6}px, ${-up}px)${flip} rotate(${dir * 360}deg)`, offset: 0.45 },
+          { transform: `translate(${x + side}px, ${down}px)${flip} rotate(${dir * 720}deg)`, opacity: 1, offset: 0.85 },
+          { transform: `translate(${x + side}px, ${down}px)${flip} rotate(${dir * 720}deg)`, opacity: 0 },
+        ],
+        { duration: 1100, easing: 'steps(12, end)', fill: 'forwards' },
+      ),
+    );
+  }
+
+  function haenger() {
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    if (lane.querySelectorAll('.bit:not(.car)').length < 2) walker(true);
+    later(() => {
+      const car = bit(HAENGER.id, HAENGER.w, HAENGER.h, `walk car${dir < 0 ? ' is-left' : ''}`);
+      const tag = document.createElement('span');
+      tag.className = 'car-tag';
+      tag.textContent = 'HÄNGER';
+      car.append(tag);
+      car.style.bottom = `${(LANE - 1) * px()}px`;
+      sfx('honk');
+      traverse(car, lane, HAENGER.w, HAENGER.speed, dir);
+      // Solange er fährt: Wer mit der Mitte in seiner Spur ist, fliegt.
+      const check = () => {
+        if (!alive || !car.isConnected) return;
+        const c = car.getBoundingClientRect();
+        for (const w of lane.querySelectorAll('.bit:not(.car):not(.is-hit)')) {
+          const r = w.getBoundingClientRect();
+          const mid = r.left + r.width / 2;
+          if (mid >= c.left && mid <= c.right) knock(w, dir);
+        }
+        requestAnimationFrame(check);
+      };
+      requestAnimationFrame(check);
+    }, 400);
+  }
+
   function life() {
     CLOUDS.forEach((c) => cloud(c, true));
     walker(true);
@@ -403,6 +465,11 @@ function createScene(main, arena, { round, monster: id, sound }) {
       later(nextFlock, rand(12000, 22000));
     };
     later(nextFlock, rand(2500, 7000));
+    const nextHaenger = () => {
+      haenger();
+      later(nextHaenger, rand(25000, 50000));
+    };
+    later(nextHaenger, rand(6000, 12000));
   }
 
   // ---------- Ablauf ----------

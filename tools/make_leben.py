@@ -38,6 +38,10 @@ PAL = {
     "m": (178, 92, 44),
     "M": (120, 56, 28),
     "u": (70, 90, 160),
+    "D": (46, 50, 60),
+    "A": (112, 118, 132),
+    "V": (150, 192, 226),
+    "T": (104, 108, 116),
 }
 
 # Alle Figuren schauen nach rechts. Läuft eine nach links, spiegelt die App sie.
@@ -176,6 +180,31 @@ FIGUREN = {
             ".....",
             ".kkk.",
             "k...k",
+        ],
+    ],
+    # Hänger: Audi-Kombi mit Anhänger, schubst alle von der Straße.
+    "haenger": [
+        [
+            "...................DDDDDDDDDDDDDD........",
+            "..bbb.bbbb........DVVVVDVVVVDVVVVD.......",
+            "..bBb.bBbb........DVVVVDVVVVDVVVVVDD.....",
+            "GGGGGGGGGGGGGG...DDDDDDDDDDDDDDDDDDDDDD..",
+            "GTTTTTTTTTTTTG...DAAAAAAAAAAAAAAAAAAAAADD",
+            "GTTTTTTTTTTTTG...rDDDDDDDDDDDDDDDDDDDDDDy",
+            "GGGGGGGGGGGGGGkkkDDDkkkDDDDDDDDDDDkkkDDDD",
+            ".....kkGkk.........kkGkk.........kkGkk...",
+            "......kkk...........kkk...........kkk....",
+        ],
+        [
+            "...................DDDDDDDDDDDDDD........",
+            "..bbb.bbbb........DVVVVDVVVVDVVVVD.......",
+            "..bBb.bBbb........DVVVVDVVVVDVVVVVDD.....",
+            "GGGGGGGGGGGGGG...DDDDDDDDDDDDDDDDDDDDDD..",
+            "GTTTTTTTTTTTTG...DAAAAAAAAAAAAAAAAAAAAADD",
+            "GTTTTTTTTTTTTG...rDDDDDDDDDDDDDDDDDDDDDDy",
+            "GGGGGGGGGGGGGGkkkDDDkkkDDDDDDDDDDDkkkDDDD",
+            ".....kGkkk.........kGkkk.........kGkkk...",
+            "......kkk...........kkk...........kkk....",
         ],
     ],
     # Drei Leckereien, die das Monster frisst, wenn du zunimmst.

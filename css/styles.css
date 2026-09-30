@@ -2431,3 +2431,33 @@ a.icon-btn {
   justify-self: center;
   gap: 6px;
 }
+
+/* Hänger im Kombi: Räder drehen schneller, Schild bleibt lesbar, auch wenn er nach links fährt. */
+.bit.car {
+  z-index: 1;
+  animation-duration: 0.18s;
+}
+
+.car-tag {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 3px;
+  padding: 2px 4px;
+  border: 1px solid #e8c870;
+  border-radius: 3px;
+  background: rgb(20 12 28 / 0.85);
+  color: #ffd21f;
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 7px;
+  white-space: nowrap;
+  translate: -50% 0;
+}
+
+.bit.car.is-left .car-tag {
+  scale: -1 1;
+}
+
+.bit.is-hit {
+  animation-play-state: paused;
+}

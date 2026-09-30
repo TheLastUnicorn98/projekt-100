@@ -1,6 +1,6 @@
 // Offline-Speicher. Bei jeder Änderung an der App die Versionsnummer erhöhen,
 // sonst bekommen installierte Handys die neuen Dateien nicht.
-const CACHE = 'projekt100-v7';
+const CACHE = 'projekt100-v8';
 const CORE = [
   './',
   './index.html',
@@ -47,6 +47,7 @@ const CORE = [
   './img/pixel/reiter.png',
   './img/pixel/schaf.png',
   './img/pixel/huhn.png',
+  './img/pixel/haenger.png',
   './img/pixel/vogel.png',
   './img/pixel/wolke1.png',
   './img/pixel/wolke2.png',

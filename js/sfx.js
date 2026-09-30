@@ -96,6 +96,16 @@ const SOUNDS = {
   },
   munch: () => [0, 0.17, 0.34].forEach((s) => noise(s, 0.07, 0.09, { type: 'lowpass', freq: 800 })),
   jump: () => tone(300, 0, 0.16, { slideTo: 720, volume: 0.05 }),
+  honk: () => {
+    [0, 0.2].forEach((s) => {
+      tone(415, s, 0.14, { volume: 0.05 });
+      tone(523, s, 0.14, { volume: 0.04 });
+    });
+  },
+  bonk: () => {
+    tone(660, 0, 0.18, { slideTo: 160, volume: 0.06 });
+    noise(0, 0.06, 0.06, { type: 'lowpass', freq: 1200 });
+  },
   inhale: () => {
     noise(0, 0.7, 0.05, { type: 'bandpass', freq: 650 });
     tone(110, 0, 0.7, { type: 'sawtooth', slideTo: 240, volume: 0.02 });
