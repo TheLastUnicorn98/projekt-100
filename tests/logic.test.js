@@ -10,7 +10,7 @@ test('Datum: ISO, Tage addieren über die Zeitumstellung, Abstand', () => {
   assert.equal(L.addDays('2026-09-30', 1), '2026-10-01');
   assert.equal(L.addDays('2026-10-24', 2), '2026-10-26');
   assert.equal(L.addDays('2027-03-27', 2), '2027-03-29');
-  assert.equal(L.daysBetween('2026-09-30', '2027-08-10'), 314);
+  assert.equal(L.daysBetween('2026-01-01', '2026-12-31'), 364);
   assert.equal(L.daysBetween('2026-10-01', '2026-09-30'), -1);
 });
 
