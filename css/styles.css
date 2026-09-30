@@ -2414,3 +2414,20 @@ a.icon-btn {
   border-color: var(--kcal);
   background: var(--kcal-soft);
 }
+
+/* Wischen zurücksetzen */
+.swipe-reset {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  text-align: center;
+}
+
+.swipe-reset .row {
+  justify-content: center;
+}
+
+.swipe-reset-btn {
+  justify-self: center;
+  gap: 6px;
+}

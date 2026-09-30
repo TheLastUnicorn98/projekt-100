@@ -557,6 +557,7 @@ const actions = {
   'swipe-target': (el) => {
     ui.swipeTarget = el.dataset.target;
     ui.swipeHistory = [];
+    ui.confirm = null;
     render();
   },
   'battle-monster': (el) => {
@@ -580,6 +581,18 @@ const actions = {
     ui.replay = state.battle.last;
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  },
+  'swipe-reset': () => {
+    ui.confirm = 'swipe-reset';
+    render();
+  },
+  'swipe-reset-yes': () => {
+    const monday = swipeMondayISO();
+    // Neuer Zufallswert, damit die Karten nach dem Zurücksetzen anders gemischt sind.
+    state.swipes[monday] = { order: P.deckFor(prefs(), RECIPES, Date.now() % 100000), votes: {} };
+    ui.swipeHistory = [];
+    ui.confirm = null;
+    persist('Stimmen gelöscht, Karten neu gemischt');
   },
   'swipe-reshuffle': () => {
     const sw = ensureSwipe(swipeMondayISO());

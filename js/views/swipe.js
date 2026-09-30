@@ -43,10 +43,18 @@ export function swipeView(ctx) {
     Object.entries(P.MIN_LIKES).filter(([k, min]) => counts[k] < min).map(([k, min]) => [k, min - counts[k]]),
   );
   const ready = !Object.keys(missing).length;
+  const rest = ctx.swipeTarget === 'rest';
+  // Zurücksetzen: alle Stimmen der gewählten Woche löschen und neu mischen, mit Rückfrage.
+  const resetAsk = ui.confirm === 'swipe-reset'
+    ? `<div class="swipe-reset"><p>Alle Stimmen für ${rest ? 'den Rest dieser Woche' : 'die nächste Woche'} löschen und die Karten neu mischen? Ein schon übernommener Plan bleibt.</p><div class="row"><button class="btn danger" data-action="swipe-reset-yes">Ja, neu wischen</button><button class="btn ghost" data-action="cancel">Abbrechen</button></div></div>`
+    : '';
   const deck = remaining.length
     ? `${remaining[1] ? card(remaining[1], false) : ''}${card(remaining[0], true)}`
-    : `<div class="deck-empty">${icon('karten')}<p><strong>Alle Gerichte gewischt.</strong></p><p class="muted">${ready ? 'Jetzt deinen Plan erstellen.' : 'Mische die Nö-Karten nochmal rein, damit genug zusammenkommt.'}</p>${ready ? '' : '<button class="btn" data-action="swipe-reshuffle">Nö-Karten nochmal zeigen</button>'}</div>`;
-  const rest = ctx.swipeTarget === 'rest';
+    : `<div class="deck-empty">${icon('karten')}<p><strong>Alle Gerichte gewischt.</strong></p><p class="muted">${ready ? 'Jetzt deinen Plan erstellen oder nochmal von vorn wischen.' : 'Mische die Nö-Karten nochmal rein, damit genug zusammenkommt.'}</p>${ready ? '' : '<button class="btn" data-action="swipe-reshuffle">Nö-Karten nochmal zeigen</button>'}${resetAsk || '<button class="btn" data-action="swipe-reset">Nochmal von vorn wischen</button>'}</div>`;
+  const voted = Object.keys(swipe.votes).length;
+  const resetBottom = remaining.length && voted
+    ? resetAsk || `<button class="btn ghost swipe-reset-btn" data-action="swipe-reset">${icon('undo', 'sm')}Wischen zurücksetzen</button>`
+    : '';
   const canRest = weekday(ctx.todayISO) !== 0;
   const eyebrow = rest
     ? `Rest dieser Woche · ab ${weekdayShort(ctx.tomorrow)} ${dayMonth(ctx.tomorrow)}`
@@ -68,7 +76,8 @@ export function swipeView(ctx) {
   <button class="swipe-btn like" data-action="vote" data-vote="1" aria-label="Will ich" ${remaining.length ? '' : 'disabled'}>${icon('herz')}</button>
 </div>
 <button class="btn primary big" data-action="build-plan" ${ready ? '' : 'disabled'}>Plan erstellen</button>
-<p class="hint center">${ready ? 'Du kannst weiterwischen oder jetzt den Plan erstellen.' : missingText(missing)} Karte antippen zeigt die Zutaten.</p>`;
+<p class="hint center">${ready ? 'Du kannst weiterwischen oder jetzt den Plan erstellen.' : missingText(missing)} Karte antippen zeigt die Zutaten.</p>
+${resetBottom}`;
 }
 
 export function previewView(ctx) {
