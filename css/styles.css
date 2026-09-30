@@ -2461,3 +2461,22 @@ a.icon-btn {
 .bit.is-hit {
   animation-play-state: paused;
 }
+
+/* Feuerwehr im Einsatz: schnell wechselndes Blaulicht und ein blauer Schein. */
+.bit.car.fire {
+  animation:
+    frames 0.16s steps(2, end) infinite,
+    blaulicht 0.32s steps(2, end) infinite;
+}
+
+@keyframes blaulicht {
+  50% {
+    filter: drop-shadow(0 0 4px rgb(80 160 255 / 0.9));
+  }
+}
+
+.bit.fire .car-tag {
+  border-color: #fff;
+  background: #c8102e;
+  color: #fff;
+}

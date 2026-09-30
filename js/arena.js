@@ -20,7 +20,9 @@ const WALKERS = [
   { id: 'huhn', w: 7, h: 7, speed: 11, weight: 1.5, gait: 'hop' },
 ];
 // Hänger: ein Kumpel im Audi-Kombi mit Anhänger. Fährt ab und zu durch und schubst alle vom Weg.
-const HAENGER = { id: 'haenger', w: 41, h: 9, speed: 50 };
+const HAENGER = { id: 'haenger', w: 47, h: 11, speed: 50, tag: 'HÄNGER', sound: 'honk' };
+// Die Feuerwehr im Einsatz: Blaulicht, Martinshorn, schneller als Hänger.
+const FEUERWEHR = { id: 'feuerwehr', w: 40, h: 15, speed: 70, tag: 'FEUERWEHR', sound: 'siren', cls: 'fire' };
 const STARS = ['#ffd21f', '#ffffff', '#ffe98a'];
 const CLOUDS = [
   { id: 'wolke1', w: 34, h: 10 },
@@ -425,18 +427,19 @@ function createScene(main, arena, { round, monster: id, sound }) {
     );
   }
 
-  function haenger() {
+  // Ein Fahrzeug fährt einmal über den Weg und schubst alle herunter.
+  function drive(v) {
     const dir = Math.random() < 0.5 ? 1 : -1;
     if (lane.querySelectorAll('.bit:not(.car)').length < 2) walker(true);
     later(() => {
-      const car = bit(HAENGER.id, HAENGER.w, HAENGER.h, `walk car${dir < 0 ? ' is-left' : ''}`);
+      const car = bit(v.id, v.w, v.h, `walk car${v.cls ? ` ${v.cls}` : ''}${dir < 0 ? ' is-left' : ''}`);
       const tag = document.createElement('span');
       tag.className = 'car-tag';
-      tag.textContent = 'HÄNGER';
+      tag.textContent = v.tag;
       car.append(tag);
       car.style.bottom = `${(LANE - 1) * px()}px`;
-      sfx('honk');
-      traverse(car, lane, HAENGER.w, HAENGER.speed, dir);
+      sfx(v.sound);
+      traverse(car, lane, v.w, v.speed, dir);
       // Solange er fährt: Wer mit der Mitte in seiner Spur ist, fliegt.
       const check = () => {
         if (!alive || !car.isConnected) return;
@@ -465,11 +468,17 @@ function createScene(main, arena, { round, monster: id, sound }) {
       later(nextFlock, rand(12000, 22000));
     };
     later(nextFlock, rand(2500, 7000));
-    const nextHaenger = () => {
-      haenger();
-      later(nextHaenger, rand(25000, 50000));
+    // Hänger und Feuerwehr kommen ab und zu vorbei, aber nie gleichzeitig.
+    const schedule = (v, gap) => {
+      const go = () => {
+        if (lane.querySelector('.bit.car')) return later(go, 4000);
+        drive(v);
+        later(go, rand(...gap));
+      };
+      return go;
     };
-    later(nextHaenger, rand(6000, 12000));
+    later(schedule(HAENGER, [25000, 50000]), rand(6000, 12000));
+    later(schedule(FEUERWEHR, [35000, 65000]), rand(16000, 24000));
   }
 
   // ---------- Ablauf ----------

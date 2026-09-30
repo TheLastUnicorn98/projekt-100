@@ -48,6 +48,7 @@ const CORE = [
   './img/pixel/schaf.png',
   './img/pixel/huhn.png',
   './img/pixel/haenger.png',
+  './img/pixel/feuerwehr.png',
   './img/pixel/vogel.png',
   './img/pixel/wolke1.png',
   './img/pixel/wolke2.png',

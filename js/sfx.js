@@ -102,6 +102,10 @@ const SOUNDS = {
       tone(523, s, 0.14, { volume: 0.04 });
     });
   },
+  // Martinshorn: zwei Töne im Wechsel, a' und d'', wie bei der deutschen Feuerwehr.
+  siren: () => {
+    for (let i = 0; i < 6; i++) tone(i % 2 ? 587 : 440, i * 0.6, 0.58, { volume: 0.035 });
+  },
   bonk: () => {
     tone(660, 0, 0.18, { slideTo: 160, volume: 0.06 });
     noise(0, 0.06, 0.06, { type: 'lowpass', freq: 1200 });
