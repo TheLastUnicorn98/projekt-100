@@ -1776,6 +1776,12 @@ a.icon-btn {
   font-weight: 800;
 }
 
+/* Virale Rezepte von Instagram und TikTok */
+.card-region.is-viral {
+  background: linear-gradient(90deg, #ff2d6f, #7b3cff);
+  color: #fff;
+}
+
 /* ---------- Bewegung ---------- */
 
 :root {

@@ -70,6 +70,7 @@ const PHOTOS = [
   'kabeljau_kartoffel', 'thunfisch_nudeln', 'garnelen_reis', 'shakshuka', 'ofenkartoffel_huettenkaese', 'snack_nuesse',
   'snack_shake', 'skyr_beeren', 'protein_pudding', 'reiswaffeln_erdnuss', 'huettenkaese_rohkost', 'quark_apfel', 'eier_airfryer', 'laugenbrezel_huettenkaese', 'maultaschen_ei', 'linsen_spaetzle',
   'kartoffelsalat_pute', 'gaisburger_marsch', 'zwiebelrostbraten', 'kaesespaetzle_light', 'schupfnudeln_sauerkraut',
+  'pesto_eier', 'tortilla_faltwrap', 'huettenkaese_pancakes', 'skyr_bagel_lachs', 'baked_oats', 'joghurt_toast', 'feta_spiegeleier', 'wolkeneier', 'dampfei', 'crispy_eggs', 'frambled_eggs', 'hot_honey_bowl', 'tuerkische_nudeln', 'bigmac_tacos', 'lasagne_suppe', 'marry_me_chicken', 'alfredo_huettenkaese', 'tomaten_reis_haehnchen', 'caesar_pizza', 'feta_pasta', 'bohnensalat_haehnchen', 'haehnchen_fajita_quesadilla', 'philly_cheesesteak_paprika', 'oyakodon', 'bieber_haehnchenbaellchen', 'swamp_soup', 'tomaten_ruehrei_reis', 'steakwuerfel_knoblauch', 'chopped_italian_sandwich', 'reiskocher_bratreis', 'pfeffer_haehnchen', 'zitronen_haehnchen_reis', 'backpapier_doener', 'rind_brokkoli', 'dirty_spaghetti', 'puten_feta_baellchen', 'gochujang_bowl', 'blech_kafta', 'lachs_bowl_mariko', 'fruehlingsrollen_bowl', 'gurkensalat_lachs', 'huettenkaese_pizza', 'huettenkaese_eis', 'skyr_lotus_cheesecake', 'skyr_schoko_cluster', 'huettenkaese_keksteig', 'mayak_eier', 'thunfischsalat_mcconaughey', 'egg_flight', 'thunfischbrot',
 ].map((id) => `./img/${id}.webp`);
 
 self.addEventListener('install', (event) => {

@@ -32,7 +32,8 @@ test('Vorlieben filtern den Stapel', () => {
   const noFish = P.deckFor({ ...DEFAULT_PREFS, proteins: DEFAULT_PREFS.proteins.filter((p) => p !== 'fisch') }, RECIPES, 1);
   assert.ok(!noFish.includes('bowl_thunfisch') && !noFish.includes('lachs_reis'));
   const onlyAirfryer = P.deckFor({ ...DEFAULT_PREFS, devices: ['airfryer'] }, RECIPES, 1);
-  assert.ok(onlyAirfryer.length > 0 && onlyAirfryer.every((id) => RECIPES[id].device === 'airfryer'));
+  // Auch Gerichte, die den Airfryer als Alternative nennen, zählen.
+  assert.ok(onlyAirfryer.length > 0 && onlyAirfryer.every((id) => [RECIPES[id].device, ...(RECIPES[id].alt ?? [])].includes('airfryer')));
   const quick = P.deckFor({ ...DEFAULT_PREFS, maxTime: 10 }, RECIPES, 1);
   assert.ok(quick.every((id) => RECIPES[id].time <= 10));
   assert.ok(!P.deckFor(DEFAULT_PREFS, RECIPES, 1).includes('frei'));

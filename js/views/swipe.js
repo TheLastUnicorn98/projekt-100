@@ -12,7 +12,7 @@ function card(id, top) {
   const m = P.mealMacros(P.defaultMeal(id, RECIPES), RECIPES, ITEMS);
   return `<article class="card-swipe ${top ? 'is-top' : 'is-under'}" data-id="${id}" ${top ? '' : 'aria-hidden="true"'}>
   <div class="card-photo card-${r.slot}">${icon(r.device, 'card-device')}<img src="img/${id}.webp" alt="" draggable="false" onerror="this.remove()"></div>
-  <span class="card-kind">${KINDS[r.slot]}</span>${r.region === 'schwaebisch' ? '<span class="card-region">Schwäbisch</span>' : ''}
+  <span class="card-kind">${KINDS[r.slot]}</span>${r.region === 'schwaebisch' ? '<span class="card-region">Schwäbisch</span>' : ''}${r.viral ? '<span class="card-region is-viral">Viral</span>' : ''}
   <span class="stamp stamp-like" aria-hidden="true">Lecker</span>
   <span class="stamp stamp-nope" aria-hidden="true">Nö</span>
   <span class="stamp stamp-super" aria-hidden="true">Unbedingt</span>
