@@ -24,14 +24,14 @@ export function weekView(ctx) {
 </div>`;
   const teaser =
     !next && !hasNext
-      ? `<a class="banner banner-brand banner-link" href="#wischen"><p>${icon('karten')}<strong>Nächste Woche planen.</strong> Gerichte wischen wie bei Tinder, die App rechnet die Portionen.</p></a>`
+      ? `<a class="banner banner-brand banner-link" href="#wischen" data-action="open-swipe" data-target="next"><p>${icon('karten')}<strong>Nächste Woche planen.</strong> Gerichte wischen wie bei Tinder, die App rechnet die Portionen.</p></a>`
       : '';
   const batchTip =
     plan?.kind === 'gewischt'
       ? `<aside class="card tip"><h2>Einmal kochen, zweimal essen</h2><p>Abends die doppelte Menge kochen, die zweite Portion gleich in eine Dose, abkühlen lassen und in den Kühlschrank. Mittags nur aufwärmen, bis es richtig heiß ist.</p></aside>`
       : '';
   const days = plan ? weekDates(monday).map((iso) => dayCard(ctx, iso, plan.days[iso], { isToday: iso === todayISO })).join('') : planCta(ctx);
-  const again = next && hasNext ? `<a class="link" href="#wischen">Nochmal wischen und neu planen</a>` : '';
+  const again = next && hasNext ? `<a class="link" href="#wischen" data-action="open-swipe" data-target="next">Nochmal wischen und neu planen</a>` : '';
   const times = AIRFRYER_TIMES.map(([what, time]) => `<li><span>${what}</span><span>${time}</span></li>`).join('');
   return `<header class="top"><div><p class="eyebrow">${weekRange(monday)}</p><h1>Wochenplan</h1></div></header>
 ${seg}

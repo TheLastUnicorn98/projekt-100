@@ -1,8 +1,8 @@
 import { RECIPES } from '../recipes.js';
 import { ITEMS, DEVICES, KINDS } from '../data.js';
-import { weekDates } from '../logic.js';
+import { weekDates, weekday } from '../logic.js';
 import * as P from '../planner.js';
-import { esc, icon, fmt } from '../ui.js';
+import { esc, icon, fmt, dayMonth, weekdayShort } from '../ui.js';
 import { dayCard, missingText, weekRange } from './parts.js';
 
 const timeText = (r) => (r.time <= 1 ? 'sofort fertig' : `${r.time} Min Arbeit`);
@@ -46,10 +46,19 @@ export function swipeView(ctx) {
   const deck = remaining.length
     ? `${remaining[1] ? card(remaining[1], false) : ''}${card(remaining[0], true)}`
     : `<div class="deck-empty">${icon('karten')}<p><strong>Alle Gerichte gewischt.</strong></p><p class="muted">${ready ? 'Jetzt deinen Plan erstellen.' : 'Mische die Nö-Karten nochmal rein, damit genug zusammenkommt.'}</p>${ready ? '' : '<button class="btn" data-action="swipe-reshuffle">Nö-Karten nochmal zeigen</button>'}</div>`;
+  const rest = ctx.swipeTarget === 'rest';
+  const canRest = weekday(ctx.todayISO) !== 0;
+  const eyebrow = rest
+    ? `Rest dieser Woche · ab ${weekdayShort(ctx.tomorrow)} ${dayMonth(ctx.tomorrow)}`
+    : `Nächste Woche · ${weekRange(ctx.nextMonday)}`;
   return `<header class="swipe-top">
   <a class="icon-btn" href="#woche" aria-label="Zurück zum Wochenplan">${icon('zurueck')}</a>
-  <div><p class="eyebrow">Nächste Woche · ${weekRange(ctx.nextMonday)}</p><h1>Gerichte wischen</h1></div>
+  <div><p class="eyebrow">${eyebrow}</p><h1>Gerichte wischen</h1></div>
 </header>
+<div class="seg" role="group" aria-label="Was planen?">
+  <button data-action="swipe-target" data-target="rest" aria-pressed="${rest}" ${canRest ? '' : 'disabled'}>Rest dieser Woche</button>
+  <button data-action="swipe-target" data-target="next" aria-pressed="${!rest}">Nächste Woche</button>
+</div>
 <div class="counts">${counter(counts, 'fruehstueck', 'Frühstück')}${counter(counts, 'haupt', 'Hauptgerichte')}${counter(counts, 'snack', 'Snacks')}<span class="count">${remaining.length} übrig</span></div>
 <div class="deck" aria-live="polite">${deck}</div>
 <div class="swipe-actions">
@@ -68,12 +77,15 @@ export function previewView(ctx) {
     return `<header class="swipe-top"><a class="icon-btn" href="#wischen" aria-label="Zurück">${icon('zurueck')}</a><div><h1>Kein Plan</h1></div></header>
 <p class="muted">Wisch zuerst ein paar Gerichte, dann erstellt die App deinen Plan.</p><a class="btn primary" href="#wischen">Zum Wischen</a>`;
   }
+  const from = ctx.ui.previewFrom;
   const days = weekDates(plan.week)
+    .filter((iso) => !from || iso >= from)
     .map((iso) => dayCard(ctx, iso, plan.days[iso]))
     .join('');
+  const eyebrow = from ? `Rest dieser Woche · ab ${weekdayShort(from)} ${dayMonth(from)}` : weekRange(plan.week);
   return `<header class="swipe-top">
   <a class="icon-btn" href="#wischen" aria-label="Zurück zum Wischen">${icon('zurueck')}</a>
-  <div><p class="eyebrow">${weekRange(plan.week)}</p><h1>Dein Plan</h1></div>
+  <div><p class="eyebrow">${eyebrow}</p><h1>${from ? 'Neuer Plan bis Sonntag' : 'Dein Plan'}</h1></div>
 </header>
 <p class="lead">Jeder Tag trifft dein Ziel. Abends kochst du doppelt, mittags gibt es den Rest. Tippe ein Gericht an, um es zu tauschen.</p>
 <div class="plan-actions">

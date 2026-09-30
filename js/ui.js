@@ -28,6 +28,9 @@ const PATHS = {
   zurueck: '<path d="M15 5l-7 7 7 7"/>',
   undo: '<path d="M4.5 9h10a5 5 0 0 1 0 10H9"/><path d="M8.5 5 4.5 9l4 4"/>',
   karten: '<rect x="4" y="5" width="11" height="15" rx="2.5"/><path d="M15 7.5l3.3.9a1.5 1.5 0 0 1 1 1.8l-2.8 10.3a1.5 1.5 0 0 1-1.8 1L10 20"/>',
+  schwert: '<path d="M14.5 3.5h6v6L10 20l-3-3z"/><path d="M5.5 14.5l4 4M3.5 20.5l2.5-2.5"/>',
+  ton: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+  stumm: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="m17 9 5 5m0-5-5 5"/>',
 };
 
 export function icon(name, cls = '') {

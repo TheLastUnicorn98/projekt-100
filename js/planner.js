@@ -1,6 +1,6 @@
 // Wochenplaner: baut aus den Rechts-Wischern eine Woche und hält jeden Tag im Kalorienziel.
 // Stellschraube ist die Beilage (Reis, Kartoffeln, Haferflocken, Brot). Fleisch, Fisch und Gemüse bleiben fix.
-import { weekDates, weekday, phaseOn, PLAN, formatAmount, formatNumber } from './logic.js';
+import { addDays, weekDates, weekday, phaseOn, PLAN, formatAmount, formatNumber } from './logic.js';
 
 export const TOLERANCE = 0.03;
 export const MAIN_SHARE = 0.34;
@@ -272,13 +272,16 @@ export function fitWeek(plan, ctx, onlyDates) {
 
 // ---------- Woche bauen ----------
 
-export function buildWeek({ mondayISO, likes, prefs, seed = 1, ...ctx }) {
+function likedPools(recipes, likes, prefs) {
   const liked = (kind) =>
-    Object.keys(ctx.recipes).filter((id) => {
-      const r = ctx.recipes[id];
-      return r.slot === kind && (likes?.[id] ?? 0) > 0 && allowed(r, prefs);
-    });
-  const pools = { fruehstueck: liked('fruehstueck'), haupt: liked('haupt'), snack: liked('snack') };
+    Object.keys(recipes).filter((id) => recipes[id].slot === kind && (likes?.[id] ?? 0) > 0 && allowed(recipes[id], prefs));
+  return { fruehstueck: liked('fruehstueck'), haupt: liked('haupt'), snack: liked('snack') };
+}
+
+// Plant aufeinanderfolgende Tage aus den Likes. `prevDinner` ist das Abendessen vom Tag davor:
+// Gibt es das, ist der erste Mittag dessen Rest, sonst wird er frisch gekocht.
+function buildDays({ dates, likes, prefs, seed = 1, prevDinner, ...ctx }) {
+  const pools = likedPools(ctx.recipes, likes, prefs);
   const missing = {};
   for (const [kind, min] of Object.entries(MIN_LIKES)) if (pools[kind].length < min) missing[kind] = min - pools[kind].length;
   if (Object.keys(missing).length) return { ok: false, missing };
@@ -288,24 +291,24 @@ export function buildWeek({ mondayISO, likes, prefs, seed = 1, ...ctx }) {
     ...shuffle(pools.haupt.filter((id) => likes[id] === 2), random),
     ...shuffle(pools.haupt.filter((id) => likes[id] !== 2), random),
   ];
-  const freeIndex = prefs?.freeEvening ? 5 : -1;
+  const before = (d) => (d === 0 ? prevDinner?.id : dinners[d - 1]);
   const dinners = [];
   let k = 0;
-  for (let d = 0; d < 7; d++) {
-    if (d === freeIndex) {
+  dates.forEach((iso, d) => {
+    if (prefs?.freeEvening && weekday(iso) === 6) {
       dinners.push('frei');
-      continue;
+      return;
     }
-    if (order[k % order.length] === dinners[d - 1]) k += 1;
+    if (order[k % order.length] === before(d)) k += 1;
     dinners.push(order[k % order.length]);
     k += 1;
-  }
+  });
 
-  // Frisch gekocht wird mittags nur, wenn es keinen Rest vom Vorabend gibt: montags und nach dem freien Abend.
+  // Frisch gekocht wird mittags nur, wenn es keinen Rest vom Vorabend gibt, etwa nach dem freien Abend.
   const used = new Map();
   for (const id of dinners) used.set(id, (used.get(id) ?? 0) + 2);
   const pickFresh = (d) => {
-    const options = order.filter((id) => id !== dinners[d] && id !== dinners[d - 1]);
+    const options = order.filter((id) => id !== dinners[d] && id !== before(d));
     options.sort((a, b) => (used.get(a) ?? 0) - (used.get(b) ?? 0) || ctx.recipes[a].time - ctx.recipes[b].time);
     const id = options[0] ?? order[0];
     used.set(id, (used.get(id) ?? 0) + 1);
@@ -314,18 +317,48 @@ export function buildWeek({ mondayISO, likes, prefs, seed = 1, ...ctx }) {
 
   const breakfasts = shuffle(pools.fruehstueck, random);
   const days = {};
-  weekDates(mondayISO).forEach((iso, d) => {
-    const leftover = d > 0 && dinners[d - 1] !== 'frei';
-    const lunch = leftover ? dinners[d - 1] : pickFresh(d);
-    const cooksDouble = d < 6 && dinners[d] !== 'frei';
+  dates.forEach((iso, d) => {
+    const prev = before(d);
+    let mittag;
+    if (d === 0 && prev && prev !== 'frei') {
+      mittag = { id: prev, ...(prevDinner.side != null ? { side: prevDinner.side } : {}), leftover: true };
+    } else if (prev && prev !== 'frei') {
+      mittag = { ...defaultMeal(prev, ctx.recipes), leftover: true };
+    } else {
+      mittag = defaultMeal(pickFresh(d), ctx.recipes);
+    }
+    const cooksDouble = d < dates.length - 1 && dinners[d] !== 'frei';
     days[iso] = {
       fruehstueck: defaultMeal(breakfasts[d % breakfasts.length], ctx.recipes),
-      mittag: { ...defaultMeal(lunch, ctx.recipes), ...(leftover ? { leftover: true } : {}) },
+      mittag,
       abend: { ...defaultMeal(dinners[d], ctx.recipes), ...(cooksDouble ? { cook: 2 } : {}) },
     };
   });
-  const plan = { week: mondayISO, kind: 'gewischt', snacks: pools.snack, days };
-  return { ok: true, plan: fitWeek(plan, ctx) };
+  return { ok: true, days, snacks: pools.snack };
+}
+
+export function buildWeek({ mondayISO, ...options }) {
+  const r = buildDays({ dates: weekDates(mondayISO), ...options });
+  if (!r.ok) return r;
+  const plan = { week: mondayISO, kind: 'gewischt', snacks: r.snacks, days: r.days };
+  return { ok: true, plan: fitWeek(plan, options) };
+}
+
+// Nochmal gewischt: ab `fromISO` bis Sonntag neu planen, die Tage davor bleiben, wie sie sind.
+export function replanRest({ plan, fromISO, ...options }) {
+  const dates = Object.keys(plan.days)
+    .sort()
+    .filter((iso) => iso >= fromISO);
+  const prevISO = addDays(fromISO, -1);
+  const prevDay = plan.days[prevISO];
+  const r = buildDays({ dates, prevDinner: prevDay?.abend, ...options });
+  if (!r.ok) return r;
+  const next = structuredClone(plan);
+  Object.assign(next.days, r.days);
+  if (next.days[dates[0]].mittag.leftover && next.days[prevISO]) next.days[prevISO].abend.cook = 2;
+  next.kind = 'gewischt';
+  next.snacks = r.snacks;
+  return { ok: true, plan: fitWeek(next, options, dates) };
 }
 
 // Woche ohne Wischen: die feste Standardwoche, ebenfalls aufs Ziel gerechnet.

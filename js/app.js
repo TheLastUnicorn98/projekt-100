@@ -11,6 +11,9 @@ import { weekView } from './views/week.js';
 import { shopView } from './views/shop.js';
 import { progressView } from './views/progress.js';
 import { swipeView, previewView } from './views/swipe.js';
+import { battleView, playRound } from './views/battle.js';
+import * as B from './battle.js';
+import * as SFX from './sfx.js';
 import { missingText } from './views/parts.js';
 import { recipeSheet, settingsSheet, onboardingView, prefsView } from './views/sheets.js';
 
@@ -20,8 +23,8 @@ const TABS = [
   { id: 'einkauf', label: 'Einkauf' },
   { id: 'verlauf', label: 'Verlauf' },
 ];
-const VIEWS = { heute: todayView, woche: weekView, einkauf: shopView, verlauf: progressView, wischen: swipeView, plan: previewView };
-const FULLSCREEN = new Set(['wischen', 'plan']);
+const VIEWS = { heute: todayView, woche: weekView, einkauf: shopView, verlauf: progressView, wischen: swipeView, plan: previewView, kampf: battleView };
+const FULLSCREEN = new Set(['wischen', 'plan', 'kampf']);
 
 const root = document.getElementById('app');
 const today = () => L.toISO(new Date());
@@ -47,7 +50,15 @@ const ui = {
   draftPrefs: structuredClone(DEFAULT_PREFS),
   fx: null,
   entering: true,
+  swipeTarget: null,
+  previewFrom: null,
+  playing: null,
+  replay: null,
 };
+
+// Wischen plant entweder den Rest dieser Woche (ab morgen) oder die nächste Woche. Am Wochenende lohnt nur die nächste.
+const swipeTarget = () => ui.swipeTarget ?? ([6, 0].includes(L.weekday(today())) ? 'next' : 'rest');
+const swipeMondayISO = () => (swipeTarget() === 'rest' ? L.mondayOf(today()) : nextMondayISO());
 
 // ---------- Pläne ----------
 
@@ -112,6 +123,7 @@ function context() {
   const steps = L.recalcSteps(s.startKg, best);
   const thisMonday = L.mondayOf(todayISO);
   const nextMonday = L.addDays(thisMonday, 7);
+  const pending = B.pendingRound(entries, s, state.battle.seen);
   return {
     state, ui, s, entries, todayISO, schedule, best, steps, thisMonday, nextMonday,
     prefs: prefs(),
@@ -119,7 +131,14 @@ function context() {
     weekPlan,
     dayPlan,
     mondayOf: L.mondayOf,
-    swipe: swipeFor(nextMonday),
+    tomorrow: L.addDays(todayISO, 1),
+    swipeTarget: swipeTarget(),
+    swipeMonday: swipeMondayISO(),
+    swipe: swipeFor(swipeMondayISO()),
+    nextSwipe: swipeFor(nextMonday),
+    round: ui.replay ?? ui.playing,
+    replaying: Boolean(ui.replay),
+    roundReady: Boolean(pending && pending.type !== 'patt'),
     planEnd: L.addDays(s.startDate, schedule.totalDays),
     streak: L.streak((iso) => P.isDayComplete(dayPlan(iso), state.days[iso]?.checked), todayISO, s.startDate),
     recalcDue: steps > s.recalcAck,
@@ -135,7 +154,21 @@ function render() {
     root.innerHTML = prefsView(ui.draftPrefs, P.deckFor(ui.draftPrefs, RECIPES).length) + toastHTML();
     return;
   }
+  // Neue Runde gleich als gekämpft merken, damit ein Neuzeichnen mitten im Kampf sie nicht doppelt abspielt.
+  if (ui.tab === 'kampf' && !ui.playing && !ui.replay) {
+    const pending = B.pendingRound(L.normalizeWeights(state.weights), state.settings, state.battle.seen);
+    if (pending) {
+      ui.playing = pending;
+      state.battle.seen = { date: pending.date, kg: pending.toKg };
+      if (pending.type !== 'patt') state.battle.last = pending;
+      saveState(state);
+    }
+  }
   const ctx = context();
+  const rail = `<nav class="rail" aria-label="Schnellzugriff">
+  <a href="#wischen" data-action="open-swipe" class="rail-btn${ui.tab === 'wischen' ? ' is-active' : ''}" aria-label="Essen tindern">${icon('karten')}</a>
+  <a href="#kampf" class="rail-btn${ui.tab === 'kampf' ? ' is-active' : ''}" aria-label="Kampf${ctx.roundReady ? ', neue Runde bereit' : ''}">${icon('schwert')}${ctx.roundReady ? '<i class="rail-dot"></i>' : ''}</a>
+</nav>`;
   const nav = FULLSCREEN.has(ui.tab)
     ? ''
     : `<nav class="tabbar" aria-label="Bereiche">${TABS.map(
@@ -144,15 +177,16 @@ function render() {
   const sheet = ui.sheet
     ? `<div class="scrim" data-action="close-sheet"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">${ui.sheet.type === 'recipe' ? recipeSheet(ctx) : settingsSheet(ctx)}</div>`
     : '';
-  root.innerHTML = `<main class="view view-${ui.tab}${ui.entering ? ' is-entering' : ''}">${VIEWS[ui.tab](ctx)}</main>${nav}${sheet}${toastHTML()}`;
+  root.innerHTML = `<main class="view view-${ui.tab}${ui.entering ? ' is-entering' : ''}">${VIEWS[ui.tab](ctx)}</main>${rail}${nav}${sheet}${toastHTML()}`;
   if (ui.tab === 'wischen' && !ui.sheet) attachDeck();
   afterRender(ctx);
   ui.entering = false;
 }
 
 function viewTransition(update) {
-  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(update);
-  else update();
+  if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return update();
+  // Tippt man schnell weiter, bricht der Browser den laufenden Übergang ab. Das ist kein Fehler.
+  document.startViewTransition(update).ready.catch(() => {});
 }
 
 // ---------- Bewegung ----------
@@ -166,6 +200,13 @@ const fmt1 = (v) => L.formatNumber(v, 1);
 function afterRender(ctx) {
   const main = root.querySelector('main');
   if (!main) return;
+
+  if (ui.tab === 'kampf' && ctx.round) {
+    const round = ctx.round;
+    ui.playing = null;
+    ui.replay = null;
+    playRound(main, round, state.battle.sound);
+  }
 
   if (ui.tab === 'heute') {
     const prev = memo.rings[ui.day] ?? {};
@@ -295,21 +336,27 @@ function closeSheet() {
 // ---------- Wischen und Plan ----------
 
 function castVote(id, vote) {
-  ensureSwipe(nextMondayISO()).votes[id] = vote;
+  ensureSwipe(swipeMondayISO()).votes[id] = vote;
   ui.swipeHistory.push(id);
   ui.fx = { type: 'vote', vote };
   persist();
 }
 
 function buildPreview() {
-  const monday = nextMondayISO();
-  const result = P.buildWeek({ ...planCtx(), mondayISO: monday, likes: swipeFor(monday).votes, prefs: prefs(), seed: ui.planSeed });
+  const rest = swipeTarget() === 'rest';
+  const monday = swipeMondayISO();
+  const from = L.addDays(today(), 1);
+  const options = { ...planCtx(), likes: swipeFor(monday).votes, prefs: prefs(), seed: ui.planSeed };
+  const result = rest
+    ? P.replanRest({ ...options, plan: weekPlan(monday), fromISO: from })
+    : P.buildWeek({ ...options, mondayISO: monday });
   if (!result.ok) {
     toast(missingText(result.missing));
     render();
     return;
   }
   ui.preview = result.plan;
+  ui.previewFrom = rest ? from : null;
   if (location.hash === '#plan') render();
   else location.hash = '#plan';
 }
@@ -368,7 +415,7 @@ const forms = {
     const s = state.settings;
     const reached = L.milestones(s.startKg, s.targetKg).find((m) => after <= m + 1e-9 && !(before <= m + 1e-9));
     ui.fx = { type: 'weight', milestone: reached ?? null };
-    persist(reached != null ? `Etappe ${L.formatNumber(reached, reached % 1 ? 1 : 0)} kg geschafft!` : 'Gewicht gespeichert');
+    persist(reached != null ? `Etappe ${L.formatNumber(reached, reached % 1 ? 1 : 0)} kg geschafft!` : 'Gewicht gespeichert. Auf in den Kampf!');
   },
 };
 
@@ -490,11 +537,38 @@ const actions = {
   'swipe-undo': () => {
     const id = ui.swipeHistory.pop();
     if (!id) return;
-    delete ensureSwipe(nextMondayISO()).votes[id];
+    delete ensureSwipe(swipeMondayISO()).votes[id];
     persist();
   },
+  // Die Seitenleiste plant standardmäßig den Rest der Woche, die Knöpfe „Nächste Woche planen“ die nächste.
+  'open-swipe': (el) => {
+    ui.swipeTarget = el.dataset.target ?? null;
+    ui.swipeHistory = [];
+    if (location.hash === '#wischen') render();
+    else location.hash = '#wischen';
+  },
+  'swipe-target': (el) => {
+    ui.swipeTarget = el.dataset.target;
+    ui.swipeHistory = [];
+    render();
+  },
+  'battle-monster': (el) => {
+    state.battle.monster = el.dataset.id;
+    SFX.play('blip', state.battle.sound);
+    persist();
+  },
+  'battle-sound': () => {
+    state.battle.sound = !state.battle.sound;
+    SFX.play('blip', state.battle.sound);
+    persist();
+  },
+  'battle-replay': () => {
+    if (!state.battle.last) return;
+    ui.replay = state.battle.last;
+    render();
+  },
   'swipe-reshuffle': () => {
-    const sw = ensureSwipe(nextMondayISO());
+    const sw = ensureSwipe(swipeMondayISO());
     for (const [id, v] of Object.entries(sw.votes)) if (v === -1) delete sw.votes[id];
     ui.swipeHistory = [];
     persist();
@@ -506,13 +580,15 @@ const actions = {
   },
   'accept-plan': () => {
     if (!ui.preview) return;
+    const rest = Boolean(ui.previewFrom);
     state.plans[ui.preview.week] = ui.preview;
     ui.preview = null;
-    ui.weekSel = 'next';
-    ui.shopSel = 'next';
+    ui.previewFrom = null;
+    ui.weekSel = rest ? 'this' : 'next';
+    ui.shopSel = rest ? 'this' : 'next';
     ui.fx = { type: 'plan' };
     saveState(state);
-    toast('Plan für nächste Woche gespeichert');
+    toast(rest ? 'Rest der Woche neu geplant' : 'Plan für nächste Woche gespeichert');
     location.hash = '#woche';
   },
   'pref-toggle': (el) => {

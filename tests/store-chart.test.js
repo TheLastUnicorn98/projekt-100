@@ -74,3 +74,12 @@ test('Diagramm-Achse mit runden Werten', () => {
   const flat = niceScale(143, 143, 4);
   assert.ok(flat.min < 143 && flat.max > 143 && flat.ticks.length >= 3);
 });
+
+test('Kampfstand wird geprüft', () => {
+  const s = normalizeState({
+    settings: ready,
+    battle: { monster: 'einhorn', seen: { date: '2026-10-01', kg: 143.4 }, last: { date: 'x' }, sound: false },
+  });
+  assert.deepEqual(s.battle, { monster: 'drache', seen: { date: '2026-10-01', kg: 143.4 }, last: null, sound: false });
+  assert.equal(normalizeState({ settings: ready, battle: { monster: 'oger' } }).battle.monster, 'oger');
+});

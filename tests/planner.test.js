@@ -175,3 +175,36 @@ test('Offline-Speicher kennt ein Foto für jedes Gericht', async () => {
   const expected = Object.keys(RECIPES).filter((id) => !RECIPES[id].fixed).sort();
   assert.deepEqual(listed, expected);
 });
+
+test('Rest der Woche neu planen: Tage davor bleiben, Rest kommt aus den neuen Likes', () => {
+  const c = ctx();
+  const week = P.buildWeek({ ...c, mondayISO: MONDAY, likes: likeAll(), prefs: DEFAULT_PREFS, seed: 3 }).plan;
+  const likes = { porridge: 1, quark_bowl: 1, shakshuka: 1, lachs_reis: 1, chili_con_carne: 1, teriyaki_haehnchen: 1, snack_shake: 1, skyr_beeren: 1 };
+  const from = '2026-10-08';
+  const r = P.replanRest({ ...c, plan: week, fromISO: from, likes, prefs: DEFAULT_PREFS, seed: 4 });
+  assert.equal(r.ok, true);
+  for (const iso of ['2026-10-05', '2026-10-06']) assert.deepEqual(r.plan.days[iso], week.days[iso]);
+  const wed = r.plan.days['2026-10-07'];
+  const thu = r.plan.days[from];
+  assert.equal(wed.abend.id, week.days['2026-10-07'].abend.id);
+  assert.equal(wed.abend.cook, 2);
+  assert.equal(thu.mittag.leftover, true);
+  assert.equal(thu.mittag.id, wed.abend.id);
+  assert.equal(thu.mittag.side, wed.abend.side);
+  const newMains = ['shakshuka', 'lachs_reis', 'chili_con_carne', 'teriyaki_haehnchen', 'frei'];
+  for (const iso of ['2026-10-08', '2026-10-09', '2026-10-10', '2026-10-11']) {
+    const day = r.plan.days[iso];
+    assert.ok(newMains.includes(day.abend.id), `${iso}: ${day.abend.id}`);
+    assert.ok(['porridge', 'quark_bowl'].includes(day.fruehstueck.id));
+    if (day.abend.id !== 'frei') withinTarget(day, iso, c);
+  }
+  assert.equal(r.plan.days['2026-10-10'].abend.id, 'frei');
+});
+
+test('Rest der Woche: zu wenige Likes werden gemeldet', () => {
+  const c = ctx();
+  const week = P.buildWeek({ ...c, mondayISO: MONDAY, likes: likeAll(), prefs: DEFAULT_PREFS, seed: 3 }).plan;
+  const r = P.replanRest({ ...c, plan: week, fromISO: '2026-10-08', likes: { porridge: 1 }, prefs: DEFAULT_PREFS });
+  assert.equal(r.ok, false);
+  assert.deepEqual(r.missing, { fruehstueck: 1, haupt: 4, snack: 2 });
+});

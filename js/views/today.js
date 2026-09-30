@@ -51,7 +51,7 @@ function banners(ctx, iso, phase, kcalTarget) {
   <div class="row"><button class="btn primary sm" data-action="recalc-apply">Ziel senken</button><button class="btn ghost sm" data-action="recalc-dismiss">Nicht jetzt</button></div></aside>`);
   }
   if (iso === todayISO && [5, 6, 0].includes(L.weekday(todayISO)) && !state.plans[nextMonday]) {
-    out.push(`<a class="banner banner-brand banner-link" href="#wischen"><p>${icon('karten')}<strong>Nächste Woche planen.</strong> Wisch dich durch die Gerichte, die App rechnet den Rest.</p></a>`);
+    out.push(`<a class="banner banner-brand banner-link" href="#wischen" data-action="open-swipe" data-target="next"><p>${icon('karten')}<strong>Nächste Woche planen.</strong> Wisch dich durch die Gerichte, die App rechnet den Rest.</p></a>`);
   }
   return out.join('');
 }

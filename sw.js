@@ -1,6 +1,6 @@
 // Offline-Speicher. Bei jeder Änderung an der App die Versionsnummer erhöhen,
 // sonst bekommen installierte Handys die neuen Dateien nicht.
-const CACHE = 'projekt100-v4';
+const CACHE = 'projekt100-v5';
 const CORE = [
   './',
   './index.html',
@@ -12,6 +12,9 @@ const CORE = [
   './js/planner.js',
   './js/gesture.js',
   './js/fx.js',
+  './js/sfx.js',
+  './js/battle.js',
+  './js/views/battle.js',
   './js/logic.js',
   './js/store.js',
   './js/chart.js',
@@ -25,6 +28,12 @@ const CORE = [
   './js/views/swipe.js',
   './fonts/BricolageGrotesque-latin.woff2',
   './fonts/Figtree-latin.woff2',
+  './fonts/PressStart2P-latin.woff2',
+  './img/pixel/burg.png',
+  './img/pixel/held.png',
+  './img/pixel/drache.png',
+  './img/pixel/oger.png',
+  './img/pixel/ritter-schwarz.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/maskable-512.png',

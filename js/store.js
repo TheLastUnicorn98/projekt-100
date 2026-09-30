@@ -1,6 +1,7 @@
 import { RECIPES } from './recipes.js';
 import { DEVICES, PROTEINS } from './data.js';
 import { mondayOf, toISO } from './logic.js';
+import { MONSTERS } from './battle.js';
 
 // Alles liegt im localStorage dieses Handys. Die Sicherung ist dieselbe Struktur als JSON-Datei.
 const KEY = 'projekt100';
@@ -17,7 +18,23 @@ export function emptyState() {
     plans: {},
     swipes: {},
     shopping: {},
+    battle: { monster: 'drache', seen: null, last: null, sound: true },
   };
+}
+
+const ROUND_TYPES = ['treffer', 'heilung', 'patt', 'sieg'];
+
+function normalizeBattle(b) {
+  const out = { monster: 'drache', seen: null, last: null, sound: true };
+  if (!b || typeof b !== 'object') return out;
+  if (MONSTERS[b.monster]) out.monster = b.monster;
+  if (ISO.test(b.seen?.date) && Number.isFinite(b.seen?.kg)) out.seen = { date: b.seen.date, kg: b.seen.kg };
+  const l = b.last;
+  if (l && ISO.test(l.date) && ROUND_TYPES.includes(l.type) && ['fromKg', 'toKg', 'fromHp', 'toHp', 'damage'].every((k) => Number.isFinite(l[k]))) {
+    out.last = { date: l.date, fromKg: l.fromKg, toKg: l.toKg, fromHp: l.fromHp, toHp: l.toHp, damage: l.damage, type: l.type };
+  }
+  out.sound = b.sound !== false;
+  return out;
 }
 
 const num = (v, fallback) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
@@ -101,6 +118,7 @@ export function normalizeState(raw, { today = toISO(new Date()) } = {}) {
     const votes = Object.fromEntries(Object.entries(obj(sw?.votes)).filter(([id, v]) => RECIPES[id] && [-1, 1, 2].includes(v)));
     state.swipes[week] = { order, votes };
   }
+  state.battle = normalizeBattle(raw.battle);
   // Version 1 hatte eine einzige Einkaufsliste. Die gilt ab jetzt für die laufende Woche.
   if (raw.shopping?.checked) state.shopping[mondayOf(today)] = { checked: trueKeys(raw.shopping.checked) };
   for (const [week, list] of Object.entries(obj(raw.shopping))) {

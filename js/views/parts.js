@@ -46,12 +46,12 @@ export function missingText(missing) {
 export const weekRange = (monday) => `${dayMonth(monday)} bis ${dayMonth(addDays(monday, 6))}`;
 
 export function planCta(ctx) {
-  const { swipe } = ctx;
+  const swipe = ctx.nextSwipe;
   const voted = swipe.order.filter((id) => id in swipe.votes).length;
   return `<section class="plan-cta">
   <div class="plan-cta-head">${icon('karten')}<p class="eyebrow">Nächste Woche · ${weekRange(ctx.nextMonday)}</p></div>
   <h2>Wisch dir deinen Plan zusammen</h2>
   <p>Rechts, was dir schmeckt, links, was nicht. Daraus baut die App deine Woche mit passenden Portionen.</p>
-  <a class="btn big" href="#wischen">${voted ? `Weiter wischen (${voted} von ${swipe.order.length})` : "Los geht's"}</a>
+  <a class="btn big" href="#wischen" data-action="open-swipe" data-target="next">${voted ? `Weiter wischen (${voted} von ${swipe.order.length})` : "Los geht's"}</a>
 </section>`;
 }

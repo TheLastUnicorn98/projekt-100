@@ -84,14 +84,14 @@ def call(path, data=None):
         return r.read()
 
 
-def graph(prompt, seed):
+def graph(prompt, seed, width=1024, height=1024):
     return {
         "1": {"class_type": "UNETLoader", "inputs": {"unet_name": UNET, "weight_dtype": "default"}},
         "2": {"class_type": "CLIPLoader", "inputs": {"clip_name": CLIP, "type": "lumina2", "device": "default"}},
         "3": {"class_type": "VAELoader", "inputs": {"vae_name": VAE}},
         "4": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["2", 0], "text": prompt}},
         "5": {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["4", 0]}},
-        "6": {"class_type": "EmptySD3LatentImage", "inputs": {"width": 1024, "height": 1024, "batch_size": 1}},
+        "6": {"class_type": "EmptySD3LatentImage", "inputs": {"width": width, "height": height, "batch_size": 1}},
         "7": {"class_type": "ModelSamplingAuraFlow", "inputs": {"model": ["1", 0], "shift": 3.0}},
         "8": {"class_type": "KSampler",
               "inputs": {"model": ["7", 0], "positive": ["4", 0], "negative": ["5", 0], "latent_image": ["6", 0],
@@ -102,9 +102,9 @@ def graph(prompt, seed):
     }
 
 
-def render(name, prompt):
-    seed = zlib.crc32(name.encode()) % 2**31
-    pid = json.loads(call("/prompt", {"prompt": graph(f"{prompt}, {STYLE}", seed)}))["prompt_id"]
+def generate(prompt, seed, width=1024, height=1024):
+    """Ein Bild erzeugen und als PIL-Bild zurückgeben."""
+    pid = json.loads(call("/prompt", {"prompt": graph(prompt, seed, width, height)}))["prompt_id"]
     t0 = time.time()
     while True:
         time.sleep(1)
@@ -118,7 +118,12 @@ def render(name, prompt):
         raise RuntimeError(json.dumps(run.get("status"), ensure_ascii=False)[:500])
     img = next(i for node in run["outputs"].values() for i in node.get("images", []))
     qs = urllib.parse.urlencode({"filename": img["filename"], "subfolder": img["subfolder"], "type": img["type"]})
-    raw = Image.open(io.BytesIO(call("/view?" + qs))).convert("RGB")
+    return Image.open(io.BytesIO(call("/view?" + qs))).convert("RGB")
+
+
+def render(name, prompt):
+    t0 = time.time()
+    raw = generate(f"{prompt}, {STYLE}", zlib.crc32(name.encode()) % 2**31)
     w, h = raw.size
     crop_w = int(h * 3 / 4)
     left = (w - crop_w) // 2
