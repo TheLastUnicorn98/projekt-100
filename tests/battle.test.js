@@ -31,3 +31,10 @@ test('Sprüche: passend zum Ausgang und für denselben Tag immer gleich', () => 
   assert.ok(B.QUOTES.heilung.includes(B.quote('heilung', '2026-10-03')));
   assert.equal(Object.keys(B.MONSTERS).sort().join(','), 'drache,oger,ritter');
 });
+
+test('Rundenschaden verteilt sich auf drei Schläge ohne Rest', () => {
+  assert.deepEqual(B.splitHits(6709), [2013, 2013, 2683]);
+  assert.deepEqual(B.splitHits(0), [0, 0, 0]);
+  for (const d of [1, 7, 4375, 257542]) assert.equal(B.splitHits(d).reduce((a, b) => a + b, 0), d);
+  for (const m of Object.values(B.MONSTERS)) assert.ok(m.attack && m.w > 0 && m.aim.length === 2 && m.mouth.length === 2);
+});

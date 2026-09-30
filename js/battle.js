@@ -4,10 +4,47 @@ import { PLAN } from './logic.js';
 
 export const KCAL_PER_KG = PLAN.kcalPerKg * PLAN.fatShare;
 
+// w: Breite der Pixelgrafik. aim und mouth: Waffe und Maul als Anteil der Bildgröße (von links oben).
+// sprite zeigt die ganze Figur (Auswahl), body die Figur ohne Waffe (Kampf). weapon.pivot ist der
+// Drehpunkt in Bildpunkten der Figur, swing die Winkel für Ausholen und Zuschlagen.
+export const HERO = {
+  body: 'img/pixel/held-koerper.png',
+  w: 38,
+  weapon: { src: 'img/pixel/held-waffe.png', x: -6, w: 44, pivot: [7, 37], front: true, swing: [150, -50] },
+};
+
 export const MONSTERS = {
-  drache: { name: 'Kalorien-Drache', sprite: 'img/pixel/drache.png' },
-  oger: { name: 'Vielfraß-Oger', sprite: 'img/pixel/oger.png' },
-  ritter: { name: 'Schwarzer Ritter', sprite: 'img/pixel/ritter-schwarz.png' },
+  drache: { name: 'Kalorien-Drache', sprite: 'img/pixel/drache.png', w: 86, attack: 'Feueratem', entrance: 'fly', aim: [0.08, 0.22], mouth: [0.08, 0.22] },
+  oger: {
+    name: 'Vielfraß-Oger',
+    sprite: 'img/pixel/oger.png',
+    body: 'img/pixel/oger-koerper.png',
+    w: 89,
+    attack: 'Keulenschlag',
+    entrance: 'stomp',
+    aim: [0.12, 0.07],
+    mouth: [0.47, 0.23],
+    weapon: { src: 'img/pixel/oger-waffe.png', x: 0, w: 89, pivot: [14, 45], swing: [50, -110] },
+  },
+  ritter: {
+    name: 'Schwarzer Ritter',
+    sprite: 'img/pixel/ritter-schwarz.png',
+    body: 'img/pixel/ritter-schwarz-koerper.png',
+    w: 60,
+    attack: 'Schwerthieb',
+    entrance: 'march',
+    aim: [0.04, 0.88],
+    mouth: [0.5, 0.1],
+    weapon: { src: 'img/pixel/ritter-schwarz-waffe.png', x: 0, w: 60, pivot: [21, 49], swing: [120, -25] },
+  },
+};
+
+export const LINES = {
+  entrance: (m) => `${m.name} stellt sich dir in den Weg!`,
+  attack: (m) => `${m.name} setzt ${m.attack} ein!`,
+  block: 'Geblockt! Jetzt schlägst du zurück.',
+  hurt: 'Autsch! Das Biest nascht und heilt sich.',
+  clash: 'Kräftemessen! Keiner weicht zurück.',
 };
 
 export const QUOTES = {
@@ -29,7 +66,18 @@ export const QUOTES = {
   ],
   treffer: ['Treffer!', 'Volltreffer!', 'Das hat gesessen!', 'Weiter so, das Biest wankt!'],
   sieg: ['Das Biest ist besiegt! Du hast dein Ziel erreicht.'],
+  uebung: [
+    'Übungsschlag! Echten Schaden macht nur die Waage.',
+    'Gut gezielt. Der echte Treffer kommt beim Wiegen.',
+    'Nur geübt. Das Biest zittert trotzdem.',
+  ],
 };
+
+// Der Schaden einer Runde verteilt sich auf drei Schläge, der letzte ist der stärkste.
+export function splitHits(damage) {
+  const part = Math.round(damage * 0.3);
+  return [part, part, damage - 2 * part];
+}
 
 export function maxHp(settings) {
   return Math.max(1, Math.round((settings.startKg - settings.targetKg) * KCAL_PER_KG));

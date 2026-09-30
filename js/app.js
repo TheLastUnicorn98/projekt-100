@@ -11,7 +11,9 @@ import { weekView } from './views/week.js';
 import { shopView } from './views/shop.js';
 import { progressView } from './views/progress.js';
 import { swipeView, previewView } from './views/swipe.js';
-import { battleView, playRound } from './views/battle.js';
+import { battleView } from './views/battle.js';
+import { startArena, stopArena, sparArena } from './arena.js';
+import { startMusic, stopMusic, setMusicEnabled } from './music.js';
 import * as B from './battle.js';
 import * as SFX from './sfx.js';
 import { missingText } from './views/parts.js';
@@ -165,7 +167,7 @@ function render() {
     }
   }
   const ctx = context();
-  const rail = `<nav class="rail" aria-label="Schnellzugriff">
+  const rail = `<nav class="rail${ui.tab === 'kampf' ? ' is-low' : ''}" aria-label="Schnellzugriff">
   <a href="#wischen" data-action="open-swipe" class="rail-btn${ui.tab === 'wischen' ? ' is-active' : ''}" aria-label="Essen tindern">${icon('karten')}</a>
   <a href="#kampf" class="rail-btn${ui.tab === 'kampf' ? ' is-active' : ''}" aria-label="Kampf${ctx.roundReady ? ', neue Runde bereit' : ''}">${icon('schwert')}${ctx.roundReady ? '<i class="rail-dot"></i>' : ''}</a>
 </nav>`;
@@ -201,11 +203,16 @@ function afterRender(ctx) {
   const main = root.querySelector('main');
   if (!main) return;
 
-  if (ui.tab === 'kampf' && ctx.round) {
+  // Die Kampfszene startet bei jedem Öffnen neu: Einmarsch, dann die neue Runde oder ein Spruch.
+  if (ui.tab === 'kampf') {
     const round = ctx.round;
     ui.playing = null;
     ui.replay = null;
-    playRound(main, round, state.battle.sound);
+    startArena(main, { round, monster: state.battle.monster, sound: () => state.battle.sound });
+    startMusic(state.battle.sound);
+  } else {
+    stopArena();
+    stopMusic();
   }
 
   if (ui.tab === 'heute') {
@@ -557,15 +564,22 @@ const actions = {
     SFX.play('blip', state.battle.sound);
     persist();
   },
-  'battle-sound': () => {
+  // Nur den Knopf umschalten, nicht neu zeichnen, sonst startet der Kampf von vorn.
+  'battle-sound': (el) => {
     state.battle.sound = !state.battle.sound;
     SFX.play('blip', state.battle.sound);
-    persist();
+    saveState(state);
+    setMusicEnabled(state.battle.sound);
+    el.setAttribute('aria-pressed', String(state.battle.sound));
+    el.setAttribute('aria-label', state.battle.sound ? 'Ton ausschalten' : 'Ton einschalten');
+    el.innerHTML = icon(state.battle.sound ? 'ton' : 'stumm');
   },
+  'battle-spar': () => sparArena(),
   'battle-replay': () => {
     if (!state.battle.last) return;
     ui.replay = state.battle.last;
     render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   },
   'swipe-reshuffle': () => {
     const sw = ensureSwipe(swipeMondayISO());

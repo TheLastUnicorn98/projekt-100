@@ -12,6 +12,9 @@ function ctx() {
   return audio;
 }
 
+// Die Musik (music.js) nutzt denselben Audio-Kontext.
+export const audioContext = () => ctx();
+
 function tone(freq, start, duration, { type = 'square', volume = 0.08, slideTo } = {}) {
   const a = ctx();
   if (!a) return;
@@ -28,7 +31,7 @@ function tone(freq, start, duration, { type = 'square', volume = 0.08, slideTo }
   osc.stop(t + duration + 0.02);
 }
 
-function noise(start, duration, volume = 0.12) {
+function noise(start, duration, volume = 0.12, { type = 'highpass', freq = 1800 } = {}) {
   const a = ctx();
   if (!a) return;
   const t = a.currentTime + start;
@@ -39,8 +42,8 @@ function noise(start, duration, volume = 0.12) {
   const filter = a.createBiquadFilter();
   const gain = a.createGain();
   src.buffer = buffer;
-  filter.type = 'highpass';
-  filter.frequency.value = 1800;
+  filter.type = type;
+  filter.frequency.value = freq;
   gain.gain.value = volume;
   src.connect(filter).connect(gain).connect(a.destination);
   src.start(t);
@@ -69,6 +72,35 @@ const SOUNDS = {
       [1047, 0.84, 0.5],
     ].forEach(([f, s, d]) => tone(f, s, d, { volume: 0.07 })),
   blip: () => tone(880, 0, 0.05, { volume: 0.04 }),
+  step: () => {
+    tone(90, 0, 0.05, { type: 'triangle', volume: 0.05 });
+    noise(0, 0.05, 0.04, { type: 'lowpass', freq: 700 });
+  },
+  thud: () => {
+    tone(110, 0, 0.24, { type: 'triangle', slideTo: 40, volume: 0.14 });
+    noise(0, 0.14, 0.08, { type: 'lowpass', freq: 420 });
+  },
+  roar: () => {
+    tone(150, 0, 0.55, { type: 'sawtooth', slideTo: 70, volume: 0.05 });
+    noise(0, 0.5, 0.06, { type: 'lowpass', freq: 900 });
+  },
+  clang: () => {
+    tone(1320, 0, 0.2, { volume: 0.045 });
+    tone(1760, 0.01, 0.16, { type: 'triangle', volume: 0.05 });
+    noise(0, 0.05, 0.07);
+  },
+  whoosh: () => noise(0, 0.18, 0.08, { type: 'bandpass', freq: 1100 }),
+  fire: () => {
+    noise(0, 0.75, 0.11, { type: 'lowpass', freq: 1300 });
+    tone(80, 0, 0.7, { type: 'sawtooth', slideTo: 60, volume: 0.025 });
+  },
+  munch: () => [0, 0.17, 0.34].forEach((s) => noise(s, 0.07, 0.09, { type: 'lowpass', freq: 800 })),
+  jump: () => tone(300, 0, 0.16, { slideTo: 720, volume: 0.05 }),
+  inhale: () => {
+    noise(0, 0.7, 0.05, { type: 'bandpass', freq: 650 });
+    tone(110, 0, 0.7, { type: 'sawtooth', slideTo: 240, volume: 0.02 });
+  },
+  fall: () => tone(420, 0, 0.7, { slideTo: 55, volume: 0.06 }),
 };
 
 export function play(name, enabled = true) {

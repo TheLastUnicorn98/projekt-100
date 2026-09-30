@@ -2075,74 +2075,202 @@ a.icon-btn {
   image-rendering: pixelated;
 }
 
+.battle-top h1 {
+  font-size: 1.3rem;
+}
+
+/* Bühne 192 × 240 Bildpunkte. --px ist ein Bildpunkt, Hintergrund und Figuren teilen dasselbe Raster. */
 .arena {
+  --px: calc(100cqw / 192);
   position: relative;
   overflow: hidden;
   container-type: inline-size;
-  aspect-ratio: 320 / 183;
+  width: 100%;
+  max-width: 440px;
+  margin-inline: auto;
+  aspect-ratio: 192 / 240;
   border: 3px solid #1b1320;
   border-radius: 14px;
   background: #3a2a4a;
   box-shadow: 0 0 0 3px #e8c870, var(--shadow);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (max-width: 40rem) {
+  .view-kampf .arena {
+    width: auto;
+    max-width: none;
+    margin-inline: -16px -64px;
+    border-inline: 0;
+    border-radius: 0;
+    box-shadow: 0 -3px 0 #e8c870, 0 3px 0 #e8c870;
+  }
+}
+
+.rail.is-low {
+  top: auto;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  transform: none;
+}
+
+.stage,
+.arena-bg,
+.sky,
+.lane,
+.fx-layer {
+  position: absolute;
+  inset: 0;
 }
 
 .arena-bg {
-  position: absolute;
-  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.sprite {
+.sky,
+.lane,
+.fx-layer {
+  pointer-events: none;
+}
+
+/* Kleine Figuren: mehrere Bilder nebeneinander in einer Datei, umgeschaltet mit steps(). */
+.bit {
   position: absolute;
-  bottom: 6%;
-  width: calc(var(--w) * 100cqw / 320 * 1.25);
-  max-width: none;
-  height: auto;
+  left: 0;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
 }
 
-.hero {
-  left: 12%;
-  animation: bob 1.1s steps(2, end) infinite;
+.bit.walk {
+  background-size: 200% 100%;
+  animation: frames 0.5s steps(2, end) infinite;
 }
 
-.foe-sprite {
-  right: 7%;
-  animation: bob 1.5s steps(2, end) infinite;
+.bit.flap {
+  animation-duration: 0.3s;
 }
 
-@keyframes bob {
+.bit.gallop,
+.bit.hop {
+  animation:
+    frames 0.3s steps(2, end) infinite,
+    hop 0.3s steps(2, end) infinite;
+}
+
+.bit.food {
+  z-index: 3;
+  background-image: url('../img/pixel/essen.png');
+  background-size: 300% 100%;
+}
+
+@keyframes frames {
+  to {
+    background-position-x: 200%;
+  }
+}
+
+@keyframes hop {
   50% {
     translate: 0 -2px;
   }
 }
 
+.pt,
+.slash {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+}
+
+.fighter {
+  position: absolute;
+  bottom: calc(12 * var(--px));
+  width: calc(var(--w) * var(--px));
+  isolation: isolate;
+  transform-origin: 50% 100%;
+  animation: bob 1.1s steps(2, end) infinite;
+}
+
+.fighter .body {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+}
+
+/* Waffe als eigenes Teil, gleiche Höhe wie der Körper. Hinter dem Körper, außer beim Helden. */
+.weapon {
+  position: absolute;
+  top: 0;
+  left: calc(var(--x) * var(--px));
+  z-index: 0;
+  width: calc(var(--ww) * var(--px));
+  max-width: none;
+  height: auto;
+  transform-origin: calc(var(--ox) * var(--px)) calc(var(--oy) * var(--px));
+}
+
+.weapon.is-front {
+  z-index: 2;
+}
+
+.hero {
+  left: calc(16 * var(--px));
+}
+
+.foe-sprite {
+  right: calc(8 * var(--px));
+  animation-duration: 1.5s;
+}
+
+.fighter.is-walking {
+  animation-duration: 0.26s;
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.arena.is-intro .fighter {
+  opacity: 0;
+}
+
+/* Besiegt: Das Biest bleibt als steinerne Statue stehen. */
 .arena.is-defeated .foe-sprite {
-  opacity: 0.25;
-  filter: grayscale(1);
-  rotate: 90deg;
+  filter: grayscale(1) brightness(0.8) contrast(1.15);
+  animation: none;
 }
 
 .hud {
   position: absolute;
-  top: 5%;
-  right: 4%;
+  top: calc(4 * var(--px));
+  right: calc(4 * var(--px));
   z-index: 2;
   display: grid;
   gap: 4px;
-  width: 54%;
+  width: 58%;
   padding: 6px 8px;
   border: 2px solid #e8c870;
   border-radius: 4px;
-  background: rgb(20 12 28 / 0.8);
+  background: rgb(20 12 28 / 0.82);
   color: #fff;
   font-family: 'Press Start 2P', ui-monospace, monospace;
+  pointer-events: none;
 }
 
 .hud-name {
   color: #ffd21f;
-  font-size: clamp(7px, 2.5cqw, 11px);
+  font-size: clamp(8px, 3cqw, 12px);
 }
 
 .hp {
@@ -2159,17 +2287,37 @@ a.icon-btn {
 }
 
 .hud-hp {
-  font-size: clamp(6px, 2.2cqw, 10px);
+  font-size: clamp(7px, 2.7cqw, 11px);
   font-variant-numeric: tabular-nums;
+}
+
+/* Kleiner Knopf oben links: letzte Runde nochmal abspielen. */
+.arena-replay {
+  position: absolute;
+  top: calc(4 * var(--px));
+  left: calc(4 * var(--px));
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 7px;
+  border: 2px solid #e8c870;
+  border-radius: 4px;
+  background: rgb(20 12 28 / 0.82);
+  color: #ffd21f;
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 8px;
+}
+
+.arena-replay:active {
+  translate: 0 1px;
 }
 
 .dmg {
   position: absolute;
-  top: 28%;
-  left: 77%;
   z-index: 3;
   font-family: 'Press Start 2P', ui-monospace, monospace;
-  font-size: clamp(12px, 5cqw, 22px);
+  font-size: clamp(12px, 5.5cqw, 24px);
   text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
   white-space: nowrap;
   pointer-events: none;
@@ -2181,11 +2329,16 @@ a.icon-btn {
 
 .dmg.is-crit {
   color: #ff5a3d;
-  font-size: clamp(14px, 6.5cqw, 28px);
+  font-size: clamp(14px, 7cqw, 30px);
 }
 
 .dmg.is-heal {
   color: #5cff8a;
+}
+
+.dmg.is-block {
+  color: #9ad8ff;
+  font-size: clamp(10px, 4cqw, 18px);
 }
 
 .dialog {
