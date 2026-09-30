@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { normalizeState, emptyState, isReady } from '../js/store.js';
 import { niceScale } from '../js/chart.js';
 
-const ready = { startKg: 144.15, targetKg: 100, startDate: '2026-09-30', kcal: 2200 };
+const ready = { startKg: 100, targetKg: 80, startDate: '2026-09-30', kcal: 2200 };
 
 test('Unbrauchbare Daten ergeben einen leeren Zustand', () => {
   assert.deepEqual(normalizeState(null), emptyState());
@@ -15,7 +15,7 @@ test('Daten aus Version 1 werden übernommen, Ungültiges fliegt raus', () => {
   const s = normalizeState(
     {
       settings: ready,
-      weights: [{ date: '2026-09-30', kg: 144.15 }, { date: 'gestern', kg: 1 }, { date: '2026-10-01', kg: 'x' }],
+      weights: [{ date: '2026-09-30', kg: 100 }, { date: 'gestern', kg: 1 }, { date: '2026-10-01', kg: 'x' }],
       days: {
         '2026-09-30': {
           checked: { fruehstueck: true, mittag: 'ja' },
@@ -29,7 +29,7 @@ test('Daten aus Version 1 werden übernommen, Ungültiges fliegt raus', () => {
   assert.equal(isReady(s), true);
   assert.equal(s.settings.protein, 150);
   assert.equal(s.prefs, null);
-  assert.deepEqual(s.weights, [{ date: '2026-09-30', kg: 144.15 }]);
+  assert.deepEqual(s.weights, [{ date: '2026-09-30', kg: 100 }]);
   assert.deepEqual(s.days['2026-09-30'], { checked: { fruehstueck: true }, swaps: { mittag: 'bowl_thunfisch' } });
   assert.deepEqual(s.shopping['2026-09-28'].checked, { reis: true });
 });
@@ -69,17 +69,17 @@ test('Vorlieben, Pläne und Wisch-Ergebnisse werden geprüft', () => {
 });
 
 test('Diagramm-Achse mit runden Werten', () => {
-  assert.deepEqual(niceScale(139.2, 144.6, 4), { min: 138, max: 146, step: 2, ticks: [138, 140, 142, 144, 146] });
-  assert.deepEqual(niceScale(100, 144.15, 5), { min: 100, max: 150, step: 10, ticks: [100, 110, 120, 130, 140, 150] });
-  const flat = niceScale(143, 143, 4);
-  assert.ok(flat.min < 143 && flat.max > 143 && flat.ticks.length >= 3);
+  assert.deepEqual(niceScale(95.2, 100.6, 4), { min: 94, max: 102, step: 2, ticks: [94, 96, 98, 100, 102] });
+  assert.deepEqual(niceScale(80, 100, 5), { min: 80, max: 100, step: 5, ticks: [80, 85, 90, 95, 100] });
+  const flat = niceScale(99, 99, 4);
+  assert.ok(flat.min < 99 && flat.max > 99 && flat.ticks.length >= 3);
 });
 
 test('Kampfstand wird geprüft', () => {
   const s = normalizeState({
     settings: ready,
-    battle: { monster: 'einhorn', seen: { date: '2026-10-01', kg: 143.4 }, last: { date: 'x' }, sound: false },
+    battle: { monster: 'einhorn', seen: { date: '2026-10-01', kg: 99.4 }, last: { date: 'x' }, sound: false },
   });
-  assert.deepEqual(s.battle, { monster: 'drache', seen: { date: '2026-10-01', kg: 143.4 }, last: null, sound: false });
+  assert.deepEqual(s.battle, { monster: 'drache', seen: { date: '2026-10-01', kg: 99.4 }, last: null, sound: false });
   assert.equal(normalizeState({ settings: ready, battle: { monster: 'oger' } }).battle.monster, 'oger');
 });

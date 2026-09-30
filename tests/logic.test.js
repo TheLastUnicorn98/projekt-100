@@ -35,7 +35,7 @@ test('Serie: Tage in Folge, heute offen zählt ab gestern, nichts vor dem Start'
 
 test('Zeitplan wie im Reel', () => {
   assert.deepEqual(L.planSchedule(120, 90), { dietDays: 175, breaks: 3, totalDays: 217 });
-  assert.deepEqual(L.planSchedule(144.15, 100), { dietDays: 258, breaks: 4, totalDays: 314 });
+  assert.deepEqual(L.planSchedule(100, 80), { dietDays: 117, breaks: 2, totalDays: 145 });
 });
 
 test('Diät-Phasen: 8 Wochen Diät, 2 Wochen Pause', () => {
@@ -50,53 +50,53 @@ test('Diät-Phasen: 8 Wochen Diät, 2 Wochen Pause', () => {
 
 test('Plan-Linie sinkt nur in Diät-Wochen', () => {
   const s = '2026-09-30';
-  near(L.planWeightOn(s, 144.15, 100, s), 144.15, 0.001);
-  const at56 = L.planWeightOn(s, 144.15, 100, L.addDays(s, 56));
-  near(at56, 144.15 - (44.15 * 56) / 258, 0.001);
-  near(L.planWeightOn(s, 144.15, 100, L.addDays(s, 63)), at56, 0.001);
-  near(L.planWeightOn(s, 144.15, 100, L.addDays(s, 314)), 100, 0.001);
-  near(L.planWeightOn(s, 144.15, 100, L.addDays(s, 400)), 100, 0.001);
+  near(L.planWeightOn(s, 100, 80, s), 100, 0.001);
+  const at56 = L.planWeightOn(s, 100, 80, L.addDays(s, 56));
+  near(at56, 100 - (20 * 56) / 117, 0.001);
+  near(L.planWeightOn(s, 100, 80, L.addDays(s, 63)), at56, 0.001);
+  near(L.planWeightOn(s, 100, 80, L.addDays(s, 145)), 80, 0.001);
+  near(L.planWeightOn(s, 100, 80, L.addDays(s, 200)), 80, 0.001);
 });
 
 test('Gewicht: Duplikate und 7-Tage-Schnitt', () => {
   const e = L.normalizeWeights([
-    { date: '2026-10-02', kg: 143.0 },
-    { date: '2026-09-30', kg: 144.2 },
-    { date: '2026-10-02', kg: 142.8 },
-    { date: '2026-10-01', kg: 143.6 },
+    { date: '2026-10-02', kg: 99.0 },
+    { date: '2026-09-30', kg: 100.2 },
+    { date: '2026-10-02', kg: 98.8 },
+    { date: '2026-10-01', kg: 99.6 },
   ]);
   assert.deepEqual(e.map((x) => x.date), ['2026-09-30', '2026-10-01', '2026-10-02']);
-  assert.equal(e[2].kg, 142.8);
-  near(L.avgOn(e, '2026-10-02'), (144.2 + 143.6 + 142.8) / 3, 0.001);
+  assert.equal(e[2].kg, 98.8);
+  near(L.avgOn(e, '2026-10-02'), (100.2 + 99.6 + 98.8) / 3, 0.001);
   assert.equal(L.avgOn(e, '2026-09-20'), null);
-  near(L.avgOn(e, '2026-10-08'), 142.8, 0.001);
+  near(L.avgOn(e, '2026-10-08'), 98.8, 0.001);
 });
 
 test('Trend und Prognose', () => {
   const s = '2026-09-30';
-  const e = Array.from({ length: 21 }, (_, i) => ({ date: L.addDays(s, i), kg: 144 - 0.2 * i }));
+  const e = Array.from({ length: 21 }, (_, i) => ({ date: L.addDays(s, i), kg: 100 - 0.2 * i }));
   const end = L.addDays(s, 20);
   const t = L.trend(e, end);
   near(t.slope, -0.2, 1e-6);
-  near(t.value, 140, 1e-6);
-  assert.equal(L.projectDate(e, 100, end), L.addDays(end, 200));
-  const flat = e.map((x) => ({ ...x, kg: 140 }));
-  assert.equal(L.projectDate(flat, 100, end), null);
-  assert.equal(L.trend([{ date: s, kg: 144 }], s), null);
+  near(t.value, 96, 1e-6);
+  assert.equal(L.projectDate(e, 76, end), L.addDays(end, 100));
+  const flat = e.map((x) => ({ ...x, kg: 96 }));
+  assert.equal(L.projectDate(flat, 76, end), null);
+  assert.equal(L.trend([{ date: s, kg: 100 }], s), null);
 });
 
 test('Etappenziele und Neuberechnung', () => {
-  assert.deepEqual(L.milestones(144.15, 100), [140, 135, 130, 125, 120, 115, 110, 105, 100]);
+  assert.deepEqual(L.milestones(100, 80), [95, 90, 85, 80]);
   assert.deepEqual(L.milestones(140, 128), [135, 130, 128]);
-  assert.equal(L.recalcSteps(144.15, 134.2), 0);
-  assert.equal(L.recalcSteps(144.15, 133.9), 1);
-  assert.equal(L.recalcSteps(144.15, 123.5), 2);
+  assert.equal(L.recalcSteps(100, 90.1), 0);
+  assert.equal(L.recalcSteps(100, 89.9), 1);
+  assert.equal(L.recalcSteps(100, 79.5), 2);
   const e = L.normalizeWeights([
-    { date: '2026-09-30', kg: 144 },
-    { date: '2026-10-10', kg: 141 },
-    { date: '2026-10-20', kg: 142 },
+    { date: '2026-09-30', kg: 100 },
+    { date: '2026-10-10', kg: 97 },
+    { date: '2026-10-20', kg: 98 },
   ]);
-  near(L.bestAverage(e), 141, 0.001);
+  near(L.bestAverage(e), 97, 0.001);
   assert.equal(L.bestAverage([]), null);
 });
 
@@ -113,5 +113,5 @@ test('Mengen und Zahlen auf Deutsch', () => {
   assert.equal(L.formatAmount(2, 'Becher'), '2 Becher');
   assert.equal(L.formatAmount(7, 'EL'), '7 EL');
   assert.equal(L.formatNumber(2234.9, 0), '2.235');
-  assert.equal(L.formatNumber(143.86, 1), '143,9');
+  assert.equal(L.formatNumber(99.86, 1), '99,9');
 });
